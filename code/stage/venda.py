@@ -8,19 +8,17 @@ import default as dflt
 def get(conn_input: MockConnection) -> pd.DataFrame:
     return utl.convert_table_to_dataframe(
         conn_input=conn_input,
-        schema_name=dflt.Schemas.client,
+        schema_name=dflt.Schema.client,
         table_name=dflt.TablesClient.venda
     )
 
 
 def create(conn_input: MockConnection) -> None:
-    frame = get(conn_input)
-
-    frame.to_sql(
+    get(conn_input).to_sql(
         name=dflt.TablesSTG.venda,
         con=conn_input,
-        schema=dflt.Schemas.stage,
+        schema=dflt.Schema.stage,
         if_exists="replace",
         index=False,
-        chunksize=1000
+        chunksize=dflt.Configuration.rows_per_data_frame
     )

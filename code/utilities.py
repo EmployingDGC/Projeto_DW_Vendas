@@ -11,11 +11,11 @@ def create_index_dataframe(data_frame: pd.DataFrame,
 def convert_table_to_dataframe(conn_input: MockConnection,
                                schema_name: str,
                                table_name: str,
-                               columns: list[str] = "*",
+                               columns: list[str] = None,
                                qty_parts: int = 100) -> pd.DataFrame:
     str_columns = ""
 
-    if columns[0] == "*" or len(columns) == 0:
+    if not columns or len(columns) == 0:
         str_columns = "*"
 
     else:
