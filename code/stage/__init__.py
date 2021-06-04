@@ -18,7 +18,7 @@ import default as dflt
 def run(conn_input: MockConnection) -> None:
     utl.create_schema(
         database=conn_input,
-        schema_name=dflt.Schema.stage
+        schema_name=dflt.schema.stage
     )
 
     cliente.create(conn_input)

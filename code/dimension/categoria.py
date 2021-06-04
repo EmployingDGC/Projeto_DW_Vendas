@@ -7,8 +7,8 @@ import default as dflt
 def get() -> pd.DataFrame:
     return pd.DataFrame(
         data={
-            dflt.Dimension.Categoria.sk: [c for c in dflt.Category.all_categories],
-            dflt.Dimension.Categoria.ds: [i + 1 for i in range(len(dflt.Category.all_categories))]
+            dflt.dimensions.categoria.sk: [c for c in dflt.categoria.all_categories],
+            dflt.dimensions.categoria.ds: [i + 1 for i in range(len(dflt.categoria.all_categories))]
         }
     )
 
@@ -19,10 +19,10 @@ def get() -> pd.DataFrame:
 
 def create(conn_input: MockConnection) -> None:
     get().to_sql(
-        name=dflt.TablesDW.categoria,
+        name=dflt.tables.dw.categoria,
         con=conn_input,
-        schema=dflt.Schema.dw,
+        schema=dflt.schema.dw,
         if_exists="replace",
         index=False,
-        chunksize=dflt.Configuration.rows_per_data_frame
+        chunksize=dflt.configuration.rows_per_data_frame
     )

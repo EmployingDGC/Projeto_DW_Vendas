@@ -13,11 +13,11 @@ if __name__ == "__main__":
     time_initial = time()
 
     conn_db = conn.create_connection_postgre(
-        server=dflt.Configuration.Connection.server,
-        database=dflt.Configuration.Connection.database,
-        username=dflt.Configuration.Connection.username,
-        password=dflt.Configuration.Connection.password,
-        port=dflt.Configuration.Connection.port
+        server=dflt.configuration.Connection.server,
+        database=dflt.configuration.Connection.database,
+        username=dflt.configuration.Connection.username,
+        password=dflt.configuration.Connection.password,
+        port=dflt.configuration.Connection.port
     )
 
     stg.run(conn_db)
