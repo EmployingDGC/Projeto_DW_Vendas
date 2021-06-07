@@ -6,4 +6,13 @@ class Connection:
     port = 5432
 
 
-rows_per_data_frame = 10000
+class ToSQL:
+    class IfExists:
+        replace = "replace"
+        append = "append"
+
+    class Index:
+        yes = True
+        no = False
+
+    rows_per_data_frame = 10000

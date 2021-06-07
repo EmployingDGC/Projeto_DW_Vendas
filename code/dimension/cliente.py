@@ -17,7 +17,7 @@ def create(conn_input: MockConnection) -> None:
         name=dflt.tables.dw.cliente,
         con=conn_input,
         schema=dflt.schema.dw,
-        if_exists="replace",
-        index=False,
-        chunksize=dflt.configuration.rows_per_data_frame
+        if_exists=dflt.configuration.ToSQL.IfExists.replace,
+        index=dflt.configuration.ToSQL.Index.no,
+        chunksize=dflt.configuration.ToSQL.rows_per_data_frame
     )

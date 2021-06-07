@@ -18,7 +18,7 @@ def create(conn_input: MockConnection) -> None:
         name=dflt.tables.stage.endereco,
         con=conn_input,
         schema=dflt.schema.stage,
-        if_exists="replace",
-        index=False,
-        chunksize=dflt.configuration.rows_per_data_frame
+        if_exists=dflt.configuration.ToSQL.IfExists.replace,
+        index=dflt.configuration.ToSQL.Index.no,
+        chunksize=dflt.configuration.ToSQL.rows_per_data_frame
     )
