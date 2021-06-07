@@ -1,33 +1,51 @@
 from time import time
 
-# import pandas as pd
+import pandas as pd
 
 import connection as conn
-import default as dflt
-import stage as stg
-import dimension as dms
+
+
+import stg_cliente
+import stg_endereco
+import stg_forma_pagamento
+import stg_funcionario
+import stg_item_venda
+import stg_loja
+import stg_produto
+import stg_venda
+
+import d_categoria
+import d_cliente
 
 
 if __name__ == "__main__":
     time_exec = time()
     time_initial = time()
 
+    pd.set_option("display.max_columns", None)
+
     conn_db = conn.create_connection_postgre(
-        server=dflt.configuration.Connection.server,
-        database=dflt.configuration.Connection.database,
-        username=dflt.configuration.Connection.username,
-        password=dflt.configuration.Connection.password,
-        port=dflt.configuration.Connection.port
+        server="10.0.0.102",
+        database="projeto_dw_vendas",
+        username="postgres",
+        password="itix.123",
+        port=5432
     )
 
-    stg.run(conn_db)
+    # criaçao das stages
 
-    print(f"\nStages carregadas em {round(time() - time_exec)} segundos\n")
-    time_exec = time()
+    # stg_cliente.run(conn_db)
+    # stg_endereco.run(conn_db)
+    # stg_forma_pagamento.run(conn_db)
+    # stg_funcionario.run(conn_db)
+    # stg_item_venda.run(conn_db)
+    # stg_loja.run(conn_db)
+    # stg_produto.run(conn_db)
+    # stg_venda.run(conn_db)
 
-    dms.run(conn_db)
+    # criação das dimensões
 
-    print(f"\nDimensions carregadas em {round(time() - time_exec)} segundos\n")
-    time_exec = time()
+    d_categoria.run(conn_db)
+    d_cliente.run(conn_db)
 
     print(f"\nFinalizado com sucesso em {round(time() - time_initial)} segundos\n")

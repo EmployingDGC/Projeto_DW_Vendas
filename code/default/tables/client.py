@@ -1,8 +1,0 @@
-cliente = "CLIENTE"
-endereco = "ENDERECO"
-forma_pagamento = "FORMA_PAGAMENTO"
-funcionario = "FUNCIONARIO"
-item_venda = "ITEM_VENDA"
-loja = "LOJA"
-produto = "PRODUTO"
-venda = "VENDA"

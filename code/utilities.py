@@ -99,6 +99,33 @@ def convert_column_to_int64(column_data_frame: pd.Series,
     )
 
 
+def convert_column_to_tittle(column_data_frame: pd.Series) -> pd.Series:
+    return column_data_frame.apply(
+        lambda value:
+        str(value).title()
+    )
+
+
+def convert_column_cpf_to_int64(column_data_frame: pd.Series,
+                                default: int) -> pd.Series:
+    return column_data_frame.apply(
+        lambda cpf:
+        int(str(cpf).replace("-", "").replace(".", "").replace(" ", ""))
+        if str(cpf).replace("-", "").replace(".", "").replace(" ", "").isnumeric() else
+        int(default)
+    )
+
+
+def convert_int_cpf_to_format_cpf(column_data_frame: pd.Series) -> pd.Series:
+    return column_data_frame.apply(
+        lambda cpf:
+        f"{int(str(f'{int(cpf):011}')[:3]):03}"
+        f".{int(str(f'{int(cpf):011}')[3:6]):03}"
+        f".{int(str(f'{int(cpf):011}')[6:9]):03}"
+        f"-{int(str(f'{int(cpf):011}')[9:]):02}"
+    )
+
+
 def create_table(conn_output: MockConnection,
                  schema_name: str,
                  table_name: str,
