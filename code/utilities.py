@@ -151,8 +151,9 @@ def convert_column_cpf_to_int64(column_data_frame: pd.Series,
                                 default: int) -> pd.Series:
     return column_data_frame.apply(
         lambda cpf:
-        int(str(cpf).replace("-", "").replace(".", "").replace(" ", ""))
-        if str(cpf).replace("-", "").replace(".", "").replace(" ", "").isnumeric() else
+        int(str(cpf).replace("-", "").replace(".", "").replace(" ", "").strip())
+        if str(cpf).replace("-", "").replace(".", "").replace(" ", "").strip().isnumeric()
+        and len(str(cpf).replace("-", "").replace(".", "").replace(" ", "").strip()) == 11 else
         int(default)
     )
 
@@ -164,6 +165,28 @@ def convert_int_cpf_to_format_cpf(column_data_frame: pd.Series) -> pd.Series:
         f".{int(str(f'{int(cpf):011}')[3:6]):03}"
         f".{int(str(f'{int(cpf):011}')[6:9]):03}"
         f"-{int(str(f'{int(cpf):011}')[9:]):02}"
+    )
+
+
+def convert_column_cnpj_to_int64(column_data_frame: pd.Series,
+                                 default: int) -> pd.Series:
+    return column_data_frame.apply(
+        lambda cnpj:
+        int(str(cnpj).replace("-", "").replace(".", "").replace("/", "").replace(" ", "").strip())
+        if str(cnpj).replace("-", "").replace(".", "").replace("/", "").replace(" ", "").strip().isnumeric()
+        and len(str(cnpj).replace("-", "").replace(".", "").replace("/", "").replace(" ", "").strip()) == 14 else
+        int(default)
+    )
+
+
+def convert_int_cnpj_to_format_cnpj(column_data_frame: pd.Series) -> pd.Series:
+    return column_data_frame.apply(
+        lambda cnpj:
+        f"{int(str(f'{int(cnpj):011}')[:2]):02}"
+        f".{int(str(f'{int(cnpj):011}')[2:5]):03}"
+        f".{int(str(f'{int(cnpj):011}')[5:8]):03}"
+        f"/{int(str(f'{int(cnpj):011}')[8:12]):04}"
+        f"-{int(str(f'{int(cnpj):011}')[12:]):02}"
     )
 
 

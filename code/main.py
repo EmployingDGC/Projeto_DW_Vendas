@@ -3,7 +3,7 @@ from time import time
 import pandas as pd
 
 
-import utilities as utl
+# import utilities as utl
 import connection as conn
 
 import stg_cliente
@@ -20,6 +20,7 @@ import d_cliente
 import d_funcionario
 import d_tipo_pagamento
 import d_produto
+import d_loja
 
 
 if __name__ == "__main__":
@@ -54,5 +55,6 @@ if __name__ == "__main__":
     d_funcionario.run(conn_db)
     d_tipo_pagamento.run(conn_db)
     d_produto.run(conn_db)
+    d_loja.run(conn_db)
 
     print(f"\nFinalizado com sucesso em {round(time() - time_initial)} segundos\n")
