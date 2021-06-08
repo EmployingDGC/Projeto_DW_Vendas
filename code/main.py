@@ -21,6 +21,7 @@ import d_funcionario
 import d_tipo_pagamento
 import d_produto
 import d_loja
+import d_endereco
 
 
 if __name__ == "__main__":
@@ -39,22 +40,23 @@ if __name__ == "__main__":
 
     # criaçao das stages
 
-    stg_cliente.run(conn_db)
-    stg_endereco.run(conn_db)
-    stg_forma_pagamento.run(conn_db)
-    stg_funcionario.run(conn_db)
-    stg_item_venda.run(conn_db)
-    stg_loja.run(conn_db)
-    stg_produto.run(conn_db)
-    stg_venda.run(conn_db)
+    # stg_cliente.run(conn_db)
+    # stg_endereco.run(conn_db)
+    # stg_forma_pagamento.run(conn_db)
+    # stg_funcionario.run(conn_db)
+    # stg_item_venda.run(conn_db)
+    # stg_loja.run(conn_db)
+    # stg_produto.run(conn_db)
+    # stg_venda.run(conn_db)
 
     # criação das dimensões
 
-    d_categoria.run(conn_db)
-    d_cliente.run(conn_db)
-    d_funcionario.run(conn_db)
-    d_tipo_pagamento.run(conn_db)
-    d_produto.run(conn_db)
-    d_loja.run(conn_db)
+    # d_categoria.run(conn_db)
+    # d_cliente.run(conn_db)
+    # d_funcionario.run(conn_db)
+    # d_tipo_pagamento.run(conn_db)
+    # d_produto.run(conn_db)
+    # d_loja.run(conn_db)
+    d_endereco.run(conn_db)
 
     print(f"\nFinalizado com sucesso em {round(time() - time_initial)} segundos\n")
