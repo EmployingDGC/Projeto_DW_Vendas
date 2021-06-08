@@ -119,6 +119,20 @@ def convert_column_to_int64(column_data_frame: pd.Series,
     )
 
 
+def convert_column_to_date(column_data_frame: pd.Series,
+                           format_: str,
+                           default: str) -> pd.Series:
+    return pd.to_datetime(
+        arg=column_data_frame.apply(
+            lambda date:
+            f"{str(date).replace('/', '').replace('-', '').strip()}"
+            if len(str(date).replace('/', '').replace('-', '').strip()) == 8 else
+            default
+        ),
+        format=format_
+    )
+
+
 def convert_column_to_tittle(column_data_frame: pd.Series) -> pd.Series:
     return column_data_frame.apply(
         lambda value:
@@ -180,7 +194,7 @@ def insert_default_values_table(df: pd.DataFrame) -> pd.DataFrame:
             if f"{df[k].dtype}" == "int64" else
             -3.0
             if f"{df[k].dtype}" == "float64" else
-            "1900/01/01"
+            "1900-01-01 00:00:00"
             if f"{df[k].dtype}" == "datetime64[ns]" else
             "Desconhecido"
             for k in df.keys()
@@ -193,7 +207,7 @@ def insert_default_values_table(df: pd.DataFrame) -> pd.DataFrame:
             if df[k].dtype == np.int64 else
             -2.0
             if df[k].dtype == np.float64 else
-            "1900/01/01"
+            "1900-01-01 00:00:00"
             if f"{df[k].dtype}" == "datetime64[ns]" else
             "Não Aplicável"
             for k in df.keys()
@@ -206,7 +220,7 @@ def insert_default_values_table(df: pd.DataFrame) -> pd.DataFrame:
             if df[k].dtype == np.int64 else
             -1.0
             if df[k].dtype == np.float64 else
-            "1900/01/01"
+            "1900-01-01 00:00:00"
             if f"{df[k].dtype}" == "datetime64[ns]" else
             "Não Informado"
             for k in df.keys()

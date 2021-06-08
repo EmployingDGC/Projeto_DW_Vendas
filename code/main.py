@@ -19,6 +19,7 @@ import d_categoria
 import d_cliente
 import d_funcionario
 import d_tipo_pagamento
+import d_produto
 
 
 if __name__ == "__main__":
@@ -52,5 +53,6 @@ if __name__ == "__main__":
     d_cliente.run(conn_db)
     d_funcionario.run(conn_db)
     d_tipo_pagamento.run(conn_db)
+    d_produto.run(conn_db)
 
     print(f"\nFinalizado com sucesso em {round(time() - time_initial)} segundos\n")
