@@ -17,6 +17,7 @@ import stg_venda
 
 import d_categoria
 import d_cliente
+import d_funcionario
 
 
 if __name__ == "__main__":
@@ -48,5 +49,6 @@ if __name__ == "__main__":
 
     d_categoria.run(conn_db)
     d_cliente.run(conn_db)
+    d_funcionario.run(conn_db)
 
     print(f"\nFinalizado com sucesso em {round(time() - time_initial)} segundos\n")

@@ -122,7 +122,7 @@ def convert_column_to_int64(column_data_frame: pd.Series,
 def convert_column_to_tittle(column_data_frame: pd.Series) -> pd.Series:
     return column_data_frame.apply(
         lambda value:
-        str(value).title()
+        str(value).strip().title()
     )
 
 
