@@ -126,6 +126,13 @@ def convert_column_to_tittle(column_data_frame: pd.Series) -> pd.Series:
     )
 
 
+def convert_column_to_upper(column_data_frame: pd.Series) -> pd.Series:
+    return column_data_frame.apply(
+        lambda value:
+        str(value).strip().upper()
+    )
+
+
 def convert_column_cpf_to_int64(column_data_frame: pd.Series,
                                 default: int) -> pd.Series:
     return column_data_frame.apply(
