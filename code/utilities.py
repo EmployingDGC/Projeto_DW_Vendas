@@ -190,6 +190,26 @@ def convert_int_cnpj_to_format_cnpj(column_data_frame: pd.Series) -> pd.Series:
     )
 
 
+def convert_column_datetime_to_hour(column_data_frame: pd.Series,
+                                    default: int) -> pd.Series:
+    return column_data_frame.apply(
+        lambda date:
+        int(str(date).split(" ")[1].split(":")[0])
+        if str(date).split(" ")[1].split(":")[0].isnumeric() else
+        int(default)
+    )
+
+
+def convert_column_datetime_to_day(column_data_frame: pd.Series,
+                                   default: int) -> pd.Series:
+    return column_data_frame.apply(
+        lambda date:
+        int(str(date).split(" ")[0].split("-")[2])
+        if str(date).split(" ")[0].split("-")[2].isnumeric() else
+        int(default)
+    )
+
+
 def insert_row(df: pd.DataFrame,
                row: int,
                values: list) -> pd.DataFrame:
