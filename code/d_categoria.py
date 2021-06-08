@@ -20,6 +20,8 @@ def get():
             "SK_CATEGORIA": [i + 1 for i in range(len(all_categories))],
             "DS_CATEGORIA": [c for c in all_categories]
         }
+    ).pipe(
+        func=utl.insert_default_values_table
     )
 
 

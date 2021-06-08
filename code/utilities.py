@@ -1,6 +1,26 @@
 from sqlalchemy.engine.mock import MockConnection
 
+import numpy as np
 import pandas as pd
+
+
+def convert_two_list_in_dict(keys: list,
+                             values: list,
+                             is_df: bool = False) -> dict:
+    res = {}
+    for key in keys:
+        for value in values:
+            if is_df:
+                res[key] = [value]
+
+            else:
+                res[key] = value
+
+            values.remove(value)
+
+            break
+
+    return res
 
 
 def create_index_dataframe(data_frame: pd.DataFrame,
@@ -123,6 +143,67 @@ def convert_int_cpf_to_format_cpf(column_data_frame: pd.Series) -> pd.Series:
         f".{int(str(f'{int(cpf):011}')[3:6]):03}"
         f".{int(str(f'{int(cpf):011}')[6:9]):03}"
         f"-{int(str(f'{int(cpf):011}')[9:]):02}"
+    )
+
+
+def insert_row(df: pd.DataFrame,
+               row: int,
+               values: list) -> pd.DataFrame:
+    return df.iloc[:row, ].append(
+        other=pd.DataFrame(
+            data=convert_two_list_in_dict(
+                keys=[k for k in df.keys()],
+                values=values,
+                is_df=True
+            )
+        ),
+        ignore_index=True
+    ).append(
+        other=df.iloc[row:, ],
+        ignore_index=True
+    ).reset_index(drop=True)
+
+
+def insert_default_values_table(df: pd.DataFrame) -> pd.DataFrame:
+    return df.pipe(
+        func=insert_row,
+        row=0,
+        values=[
+            -3
+            if f"{df[k].dtype}" == "int64" else
+            -3.0
+            if f"{df[k].dtype}" == "float64" else
+            "1900/01/01"
+            if f"{df[k].dtype}" == "datetime64[ns]" else
+            "Desconhecido"
+            for k in df.keys()
+        ]
+    ).pipe(
+        func=insert_row,
+        row=0,
+        values=[
+            -2
+            if df[k].dtype == np.int64 else
+            -2.0
+            if df[k].dtype == np.float64 else
+            "1900/01/01"
+            if f"{df[k].dtype}" == "datetime64[ns]" else
+            "Não Aplicável"
+            for k in df.keys()
+        ]
+    ).pipe(
+        func=insert_row,
+        row=0,
+        values=[
+            -1
+            if df[k].dtype == np.int64 else
+            -1.0
+            if df[k].dtype == np.float64 else
+            "1900/01/01"
+            if f"{df[k].dtype}" == "datetime64[ns]" else
+            "Não Informado"
+            for k in df.keys()
+        ]
     )
 
 

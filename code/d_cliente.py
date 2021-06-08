@@ -1,5 +1,3 @@
-import pandas as pd
-
 import utilities as utl
 
 
@@ -24,8 +22,7 @@ def treat(frame):
     frame_res = frame.drop_duplicates(
         subset=["cpf", "nome"]
     ).assign(
-        nome=lambda df: utl.convert_column_to_tittle(df.nome)
-    ).assign(
+        nome=lambda df: utl.convert_column_to_tittle(df.nome),
         cpf=lambda df: utl.convert_column_cpf_to_int64(df.cpf, -3)
     )
 
@@ -46,7 +43,9 @@ def treat(frame):
 
     return frame_res.rename(
         columns=columns_rename
-    ).reset_index(drop=True)
+    ).pipe(
+        func=utl.insert_default_values_table
+    )
 
 
 def run(conn_input):

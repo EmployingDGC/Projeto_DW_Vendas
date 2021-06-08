@@ -2,8 +2,9 @@ from time import time
 
 import pandas as pd
 
-import connection as conn
 
+import utilities as utl
+import connection as conn
 
 import stg_cliente
 import stg_endereco
