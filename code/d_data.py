@@ -19,6 +19,15 @@ def treat(frame):
         "data_venda": "DT_REFERENCIA"
     }
 
+    order_columns = [
+        "SK_DATA",
+        "DT_REFERENCIA",
+        "DT_HORA",
+        "DT_DIA",
+        "DT_MES",
+        "DT_ANO"
+    ]
+
     frame_res = frame.drop_duplicates(
         subset=["data_venda"]
     ).assign(
@@ -26,22 +35,16 @@ def treat(frame):
         DT_HORA=lambda df: utl.convert_column_datetime_to_hour(df.data_venda, -3),
         DT_DIA=lambda df: utl.convert_column_datetime_to_day(df.data_venda, -3),
         DT_MES=lambda df: utl.convert_column_datetime_to_month(df.data_venda, -3),
-        DT_ANO=lambda df: utl.convert_column_datetime_to_year(df.data_venda, -3)
-    )
-
-    frame_res.insert(
-        loc=0,
-        column="SK_DATA",
-        value=utl.create_index_dataframe(
-            data_frame=frame_res,
-            first_index=1
-        )
+        DT_ANO=lambda df: utl.convert_column_datetime_to_year(df.data_venda, -3),
+        SK_DATA=lambda df: utl.create_index_dataframe(df, 1)
     )
 
     return frame_res.rename(
         columns=columns_rename
     ).pipe(
         func=utl.insert_default_values_table
+    ).filter(
+        items=order_columns
     )
 
 
