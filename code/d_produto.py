@@ -25,42 +25,28 @@ def treat(frame):
         "ativo": "FL_ATIVO"
     }
 
-    frame_res = frame.assign(
-        id_produto=lambda df: utl.convert_column_cpf_to_int64(
-            column_data_frame=df.id_produto,
-            default=-3
-        ),
-        cod_barra=lambda df: utl.convert_column_cpf_to_int64(
-            column_data_frame=df.cod_barra,
-            default=-3
-        ),
-        nome_produto=lambda df: utl.convert_column_to_tittle(
-            column_data_frame=df.nome_produto
-        ),
-        data_cadastro=lambda df: utl.convert_column_to_date(
-            column_data_frame=df.data_cadastro,
-            format_="%d%m%Y",
-            default="01011900"
-        ),
-        ativo=lambda df: utl.convert_column_cpf_to_int64(
-            column_data_frame=df.ativo,
-            default=-3
-        )
-    )
+    order_columns = [
+        "SK_PRODUTO",
+        "CD_PRODUTO",
+        "CD_BARRAS",
+        "NO_PRODUTO",
+        "DT_CADASTRO",
+        "FL_ATIVO"
+    ]
 
-    frame_res.insert(
-        loc=0,
-        column="SK_PRODUTO",
-        value=utl.create_index_dataframe(
-            data_frame=frame_res,
-            first_index=1
-        )
-    )
-
-    return frame_res.rename(
+    return frame.assign(
+        id_produto=lambda df: utl.convert_column_to_int64(df.id_produto, -3),
+        cod_barra=lambda df: utl.convert_column_to_int64(df.cod_barra, -3),
+        nome_produto=lambda df: utl.convert_column_to_tittle(df.nome_produto),
+        data_cadastro=lambda df: utl.convert_column_to_date(df.data_cadastro, "%d%m%Y", "01011900"),
+        ativo=lambda df: utl.convert_column_to_int64(df.ativo, -3),
+        SK_PRODUTO=lambda df: utl.create_index_dataframe(df, 1)
+    ).rename(
         columns=columns_rename
     ).pipe(
         func=utl.insert_default_values_table
+    ).filter(
+        items=order_columns
     )
 
 
