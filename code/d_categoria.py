@@ -81,7 +81,8 @@ def run(conn_input):
 # bebidas = (
 #     "SUCOS",
 #     "CERVEJAS",
-#     "REFRIGERANTES"
+#     "REFRIGERANTES",
+#     "VINHO"
 # )
 # higiene = (
 #     "SABONETE",
