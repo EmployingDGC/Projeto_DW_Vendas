@@ -95,26 +95,48 @@ def convert_table_to_dataframe(conn_input: MockConnection,
 
 def convert_column_to_float64(column_data_frame: pd.Series,
                               default: float) -> pd.Series:
+    def if_1(num):
+        return str(num).isnumeric()
+
+    def if_2(num):
+        str_ = str(num).replace(",", ".")
+
+        return (
+            str_.count(".") == 1
+            and
+            str_.replace(".", "").isnumeric()
+        )
+
     return column_data_frame.apply(
         lambda num:
         float(num)
-        if str(num).isnumeric() else
+        if if_1(num) else
         float(str(num).replace(",", "."))
-        if str(num).replace(",", ".").replace(".", "").isnumeric()
-        and str(num).replace(",", ".").count(".") == 1 else
+        if if_2(num) else
         float(default)
     )
 
 
 def convert_column_to_int64(column_data_frame: pd.Series,
                             default: int) -> pd.Series:
+    def if_1(num):
+        return str(num).isnumeric()
+
+    def if_2(num):
+        str_ = str(num).replace(",", ".")
+
+        return (
+            str_.count(".") == 1
+            and
+            str_.replace(".", "").isnumeric()
+        )
+
     return column_data_frame.apply(
         lambda num:
         int(num)
-        if str(num).isnumeric() else
+        if if_1(num) else
         int(str(num).replace(",", ".").split(".")[0])
-        if str(num).replace(",", ".").replace(".", "").isnumeric()
-        and str(num).replace(",", ".").count(".") == 1 else
+        if if_2(num) else
         int(default)
     )
 
@@ -122,11 +144,14 @@ def convert_column_to_int64(column_data_frame: pd.Series,
 def convert_column_to_date(column_data_frame: pd.Series,
                            format_: str,
                            default: str) -> pd.Series:
+    def if_1(date):
+        return len(str(date).replace('/', '').replace('-', '').strip()) == 8
+
     return pd.to_datetime(
         arg=column_data_frame.apply(
             lambda date:
-            f"{str(date).replace('/', '').replace('-', '').strip()}"
-            if len(str(date).replace('/', '').replace('-', '').strip()) == 8 else
+            str(date).replace('/', '').replace('-', '').strip()
+            if if_1(date) else
             default
         ),
         format=format_
@@ -149,11 +174,19 @@ def convert_column_to_upper(column_data_frame: pd.Series) -> pd.Series:
 
 def convert_column_cpf_to_int64(column_data_frame: pd.Series,
                                 default: int) -> pd.Series:
+    def if_1(cpf):
+        str_ = str(cpf).replace("-", "").replace(".", "").replace(" ", "").strip()
+
+        return (
+            str_.isnumeric()
+            and
+            len(str_) == 11
+        )
+
     return column_data_frame.apply(
         lambda cpf:
         int(str(cpf).replace("-", "").replace(".", "").replace(" ", "").strip())
-        if str(cpf).replace("-", "").replace(".", "").replace(" ", "").strip().isnumeric()
-        and len(str(cpf).replace("-", "").replace(".", "").replace(" ", "").strip()) == 11 else
+        if if_1(cpf) else
         int(default)
     )
 
@@ -170,11 +203,19 @@ def convert_int_cpf_to_format_cpf(column_data_frame: pd.Series) -> pd.Series:
 
 def convert_column_cnpj_to_int64(column_data_frame: pd.Series,
                                  default: int) -> pd.Series:
+    def if_1(cnpj):
+        str_ = str(cnpj).replace("-", "").replace(".", "").replace("/", "").replace(" ", "").strip()
+
+        return (
+            str_.isnumeric()
+            and
+            len(str_) == 14
+        )
+
     return column_data_frame.apply(
         lambda cnpj:
         int(str(cnpj).replace("-", "").replace(".", "").replace("/", "").replace(" ", "").strip())
-        if str(cnpj).replace("-", "").replace(".", "").replace("/", "").replace(" ", "").strip().isnumeric()
-        and len(str(cnpj).replace("-", "").replace(".", "").replace("/", "").replace(" ", "").strip()) == 14 else
+        if if_1(cnpj) else
         int(default)
     )
 
@@ -192,20 +233,52 @@ def convert_int_cnpj_to_format_cnpj(column_data_frame: pd.Series) -> pd.Series:
 
 def convert_column_datetime_to_hour(column_data_frame: pd.Series,
                                     default: int) -> pd.Series:
+    def if_1(date):
+        return str(date).split(" ")[1].split(":")[0].isnumeric()
+
     return column_data_frame.apply(
         lambda date:
         int(str(date).split(" ")[1].split(":")[0])
-        if str(date).split(" ")[1].split(":")[0].isnumeric() else
+        if if_1(date) else
         int(default)
     )
 
 
 def convert_column_datetime_to_day(column_data_frame: pd.Series,
                                    default: int) -> pd.Series:
+    def if_1(date):
+        return str(date).split(" ")[0].split("-")[2].isnumeric()
+
     return column_data_frame.apply(
         lambda date:
         int(str(date).split(" ")[0].split("-")[2])
-        if str(date).split(" ")[0].split("-")[2].isnumeric() else
+        if if_1(date) else
+        int(default)
+    )
+
+
+def convert_column_datetime_to_month(column_data_frame: pd.Series,
+                                     default: int) -> pd.Series:
+    def if_1(date):
+        return str(date).split(" ")[0].split("-")[1].isnumeric()
+
+    return column_data_frame.apply(
+        lambda date:
+        int(str(date).split(" ")[0].split("-")[1])
+        if if_1(date) else
+        int(default)
+    )
+
+
+def convert_column_datetime_to_year(column_data_frame: pd.Series,
+                                    default: int) -> pd.Series:
+    def if_1(date):
+        return str(date).split(" ")[0].split("-")[0].isnumeric()
+
+    return column_data_frame.apply(
+        lambda date:
+        int(str(date).split(" ")[0].split("-")[0])
+        if if_1(date) else
         int(default)
     )
 
@@ -229,16 +302,25 @@ def insert_row(df: pd.DataFrame,
 
 
 def insert_default_values_table(df: pd.DataFrame) -> pd.DataFrame:
+    def if_1(key):
+        return f"{df[key].dtype}" == "int64"
+
+    def if_2(key):
+        return f"{df[key].dtype}" == "float64"
+
+    def if_3(key):
+        return f"{df[key].dtype}" == "datetime64[ns]"
+
     return df.pipe(
         func=insert_row,
         row=0,
         values=[
             -3
-            if f"{df[k].dtype}" == "int64" else
+            if if_1(k) else
             -3.0
-            if f"{df[k].dtype}" == "float64" else
+            if if_2(k) else
             "1900-01-01 00:00:00"
-            if f"{df[k].dtype}" == "datetime64[ns]" else
+            if if_3(k) else
             "Desconhecido"
             for k in df.keys()
         ]
@@ -247,11 +329,11 @@ def insert_default_values_table(df: pd.DataFrame) -> pd.DataFrame:
         row=0,
         values=[
             -2
-            if df[k].dtype == np.int64 else
+            if if_1(k) else
             -2.0
-            if df[k].dtype == np.float64 else
+            if if_2(k) else
             "1900-01-01 00:00:00"
-            if f"{df[k].dtype}" == "datetime64[ns]" else
+            if if_3(k) else
             "Não Aplicável"
             for k in df.keys()
         ]
@@ -260,11 +342,11 @@ def insert_default_values_table(df: pd.DataFrame) -> pd.DataFrame:
         row=0,
         values=[
             -1
-            if df[k].dtype == np.int64 else
+            if if_1(k) else
             -1.0
-            if df[k].dtype == np.float64 else
+            if if_2(k) else
             "1900-01-01 00:00:00"
-            if f"{df[k].dtype}" == "datetime64[ns]" else
+            if if_3(k) else
             "Não Informado"
             for k in df.keys()
         ]

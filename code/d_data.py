@@ -23,8 +23,10 @@ def treat(frame):
         subset=["data_venda"]
     ).assign(
         data_venda=lambda df: pd.to_datetime(df.data_venda),
+        DT_HORA=lambda df: utl.convert_column_datetime_to_hour(df.data_venda, -3),
         DT_DIA=lambda df: utl.convert_column_datetime_to_day(df.data_venda, -3),
-        DT_HORA=lambda df: utl.convert_column_datetime_to_hour(df.data_venda, -3)
+        DT_MES=lambda df: utl.convert_column_datetime_to_month(df.data_venda, -3),
+        DT_ANO=lambda df: utl.convert_column_datetime_to_year(df.data_venda, -3)
     )
 
     frame_res.insert(
