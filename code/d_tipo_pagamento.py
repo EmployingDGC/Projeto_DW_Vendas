@@ -19,26 +19,24 @@ def treat(frame):
         "descricao": "DS_PAGAMENTO"
     }
 
-    frame_res = frame.drop_duplicates(
+    order_columns = [
+        "SK_PAGAMENTO",
+        "NO_PAGAMENTO",
+        "DS_PAGAMENTO"
+    ]
+
+    return frame.drop_duplicates(
         subset=["nome", "descricao"]
     ).assign(
         nome=lambda df: utl.convert_column_to_upper(df.nome),
-        descricao=lambda df: utl.convert_column_to_upper(df.descricao)
-    )
-
-    frame_res.insert(
-        loc=0,
-        column="SK_PAGAMENTO",
-        value=utl.create_index_dataframe(
-            data_frame=frame_res,
-            first_index=1
-        )
-    )
-
-    return frame_res.rename(
+        descricao=lambda df: utl.convert_column_to_upper(df.descricao),
+        SK_PAGAMENTO=lambda df: utl.create_index_dataframe(df, 1)
+    ).rename(
         columns=columns_rename
     ).pipe(
         func=utl.insert_default_values_table
+    ).filter(
+        items=order_columns
     )
 
 
