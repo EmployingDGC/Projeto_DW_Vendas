@@ -21,31 +21,28 @@ def treat(frame):
         "razao_social": "NO_RAZAO_SOCIAL"
     }
 
+    order_columns = [
+        "SK_LOJA",
+        "CD_CNPJ",
+        "DS_CNPJ",
+        "NO_LOJA",
+        "NO_RAZAO_SOCIAL"
+    ]
+
     frame_res = frame.assign(
         cnpj=lambda df: utl.convert_column_cnpj_to_int64(df.cnpj, -3),
         nome_loja=lambda df: utl.convert_column_to_tittle(df.nome_loja),
-        razao_social=lambda df: utl.convert_column_to_tittle(df.razao_social)
-    )
-
-    frame_res.insert(
-        loc=0,
-        column="SK_LOJA",
-        value=utl.create_index_dataframe(
-            data_frame=frame_res,
-            first_index=1
-        )
-    )
-
-    frame_res.insert(
-        loc=2,
-        column="DS_CNPJ",
-        value=utl.convert_int_cnpj_to_format_cnpj(frame_res.cnpj)
+        razao_social=lambda df: utl.convert_column_to_tittle(df.razao_social),
+        DS_CNPJ=lambda df: utl.convert_int_cnpj_to_format_cnpj(df.cnpj),
+        SK_LOJA=lambda df: utl.create_index_dataframe(df, 1)
     )
 
     return frame_res.rename(
         columns=columns_rename
     ).pipe(
         func=utl.insert_default_values_table
+    ).filter(
+        items=order_columns
     )
 
 
