@@ -26,6 +26,34 @@ import d_tipo_pagamento
 import d_turno
 
 
+def run_stg(conn_input):
+    stg_cliente.run(conn_input)
+    stg_endereco.run(conn_input)
+    stg_forma_pagamento.run(conn_input)
+    stg_funcionario.run(conn_input)
+    stg_item_venda.run(conn_input)
+    stg_loja.run(conn_input)
+    stg_produto.run(conn_input)
+    stg_venda.run(conn_input)
+
+
+def run_dms(conn_output):
+    d_categoria.run(conn_output)
+    d_cliente.run(conn_output)
+    d_data.run(conn_output)
+    d_endereco.run(conn_output)
+    d_funcionario.run(conn_output)
+    d_loja.run(conn_output)
+    d_produto.run(conn_output)
+    d_tipo_pagamento.run(conn_output)
+    d_turno.run(conn_output)
+
+
+def run(connection):
+    run_stg(connection)
+    run_dms(connection)
+
+
 if __name__ == "__main__":
     time_exec = time()
     time_initial = time()
@@ -40,27 +68,6 @@ if __name__ == "__main__":
         port=5432
     )
 
-    # criaçao das stages
-
-    stg_cliente.run(conn_db)
-    stg_endereco.run(conn_db)
-    stg_forma_pagamento.run(conn_db)
-    stg_funcionario.run(conn_db)
-    stg_item_venda.run(conn_db)
-    stg_loja.run(conn_db)
-    stg_produto.run(conn_db)
-    stg_venda.run(conn_db)
-
-    # criação das dimensões
-
-    d_categoria.run(conn_db)
-    d_cliente.run(conn_db)
-    d_data.run(conn_db)
-    d_endereco.run(conn_db)
-    d_funcionario.run(conn_db)
-    d_loja.run(conn_db)
-    d_produto.run(conn_db)
-    d_tipo_pagamento.run(conn_db)
-    d_turno.run(conn_db)
+    run(conn_db)
 
     print(f"\nFinalizado com sucesso em {round(time() - time_initial)} segundos\n")
