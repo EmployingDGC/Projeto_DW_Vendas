@@ -28,7 +28,7 @@ def treat(frame):
         "DT_ANO"
     ]
 
-    frame_res = frame.drop_duplicates(
+    return frame.drop_duplicates(
         subset=["data_venda"]
     ).assign(
         data_venda=lambda df: pd.to_datetime(df.data_venda),
@@ -37,9 +37,7 @@ def treat(frame):
         DT_MES=lambda df: utl.convert_column_datetime_to_month(df.data_venda, -3),
         DT_ANO=lambda df: utl.convert_column_datetime_to_year(df.data_venda, -3),
         SK_DATA=lambda df: utl.create_index_dataframe(df, 1)
-    )
-
-    return frame_res.rename(
+    ).rename(
         columns=columns_rename
     ).pipe(
         func=utl.insert_default_values_table

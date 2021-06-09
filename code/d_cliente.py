@@ -26,16 +26,14 @@ def treat(frame):
         "NO_CLIENTE"
     ]
 
-    frame_res = frame.drop_duplicates(
+    return frame.drop_duplicates(
         subset=["cpf", "nome"]
     ).assign(
         nome=lambda df: utl.convert_column_to_tittle(df.nome),
         cpf=lambda df: utl.convert_column_cpf_to_int64(df.cpf, -3),
         DS_CPF=lambda df: utl.convert_int_cpf_to_format_cpf(df.cpf),
         SK_CLIENTE=lambda df: utl.create_index_dataframe(df, 1)
-    )
-
-    return frame_res.rename(
+    ).rename(
         columns=columns_rename
     ).pipe(
         func=utl.insert_default_values_table

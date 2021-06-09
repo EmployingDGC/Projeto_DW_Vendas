@@ -34,17 +34,15 @@ def treat(frame):
         "NO_RUA"
     ]
 
-    frame_res = frame.assign(
+    return frame.drop_duplicates(
+        subset=[k for k in frame.keys()]
+    ).assign(
         id_endereco=lambda df: utl.convert_column_to_int64(df.id_endereco, -3),
         estado=lambda df: utl.convert_column_to_tittle(df.estado),
         cidade=lambda df: utl.convert_column_to_tittle(df.cidade),
         bairro=lambda df: utl.convert_column_to_tittle(df.bairro),
         rua=lambda df: utl.convert_column_to_tittle(df.rua),
         SK_ENDERECO=lambda df: utl.create_index_dataframe(df, 1)
-    )
-
-    return frame_res.drop_duplicates(
-        subset=[k for k in frame_res.keys()]
     ).rename(
         columns=columns_rename
     ).pipe(
