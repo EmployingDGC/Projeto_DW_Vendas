@@ -19,32 +19,28 @@ def treat(frame):
         "nome": "NO_FUNCIONARIO"
     }
 
+    order_columns = [
+        "SK_FUNCIONARIO",
+        "CD_CPF",
+        "DS_CPF",
+        "NO_FUNCIONARIO"
+    ]
+
     frame_res = frame.drop_duplicates(
         subset=["cpf", "nome"]
     ).assign(
         nome=lambda df: utl.convert_column_to_tittle(df.nome),
-        cpf=lambda df: utl.convert_column_cpf_to_int64(df.cpf, -3)
-    )
-
-    frame_res.insert(
-        loc=0,
-        column="SK_FUNCIONARIO",
-        value=utl.create_index_dataframe(
-            data_frame=frame_res,
-            first_index=1
-        )
-    )
-
-    frame_res.insert(
-        loc=2,
-        column="DS_CPF",
-        value=utl.convert_int_cpf_to_format_cpf(frame_res.cpf)
+        cpf=lambda df: utl.convert_column_cpf_to_int64(df.cpf, -3),
+        DS_CPF=lambda df: utl.convert_int_cpf_to_format_cpf(df.cpf),
+        SK_FUNCIONARIO=lambda df: utl.create_index_dataframe(df, 1)
     )
 
     return frame_res.rename(
         columns=columns_rename
     ).pipe(
         func=utl.insert_default_values_table
+    ).filter(
+        items=order_columns
     )
 
 
