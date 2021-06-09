@@ -7,6 +7,7 @@ def get(conn_input):
         schema_name="stage",
         table_name="STG_ENDERECO",
         columns=[
+            "id_endereco",
             "estado",
             "cidade",
             "bairro",
@@ -17,26 +18,29 @@ def get(conn_input):
 
 def treat(frame):
     columns_rename = {
+        "id_endereco": "CD_ENDERECO",
         "estado": "NO_ESTADO",
         "cidade": "NO_CIDADE",
         "bairro": "NO_BAIRRO",
         "rua": "NO_RUA"
     }
 
+    order_columns = [
+        "SK_ENDERECO",
+        "CD_ENDERECO",
+        "NO_ESTADO",
+        "NO_CIDADE",
+        "NO_BAIRRO",
+        "NO_RUA"
+    ]
+
     frame_res = frame.assign(
+        id_endereco=lambda df: utl.convert_column_to_int64(df.id_endereco, -3),
         estado=lambda df: utl.convert_column_to_tittle(df.estado),
         cidade=lambda df: utl.convert_column_to_tittle(df.cidade),
         bairro=lambda df: utl.convert_column_to_tittle(df.bairro),
-        rua=lambda df: utl.convert_column_to_tittle(df.rua)
-    )
-
-    frame_res.insert(
-        loc=0,
-        column="SK_ENDERECO",
-        value=utl.create_index_dataframe(
-            data_frame=frame_res,
-            first_index=1
-        )
+        rua=lambda df: utl.convert_column_to_tittle(df.rua),
+        SK_ENDERECO=lambda df: utl.create_index_dataframe(df, 1)
     )
 
     return frame_res.drop_duplicates(
@@ -45,6 +49,8 @@ def treat(frame):
         columns=columns_rename
     ).pipe(
         func=utl.insert_default_values_table
+    ).filter(
+        items=order_columns
     )
 
 
