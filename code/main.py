@@ -25,6 +25,8 @@ import d_produto
 import d_tipo_pagamento
 import d_turno
 
+import f_venda_produto
+
 
 def run_stg(conn_input):
     stg_cliente.run(conn_input)
@@ -49,9 +51,14 @@ def run_dms(conn_output):
     d_turno.run(conn_output)
 
 
+def run_fact(conn_output):
+    f_venda_produto.run(conn_output)
+
+
 def run(connection):
     run_stg(connection)
     run_dms(connection)
+    run_fact(connection)
 
 
 if __name__ == "__main__":

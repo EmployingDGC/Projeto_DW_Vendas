@@ -28,9 +28,7 @@ def treat(frame):
         "DT_ANO"
     ]
 
-    return frame.drop_duplicates(
-        subset=["data_venda"]
-    ).assign(
+    return frame.assign(
         data_venda=lambda df: pd.to_datetime(df.data_venda),
         DT_HORA=lambda df: utl.convert_column_datetime_to_hour(df.data_venda, -3),
         DT_DIA=lambda df: utl.convert_column_datetime_to_day(df.data_venda, -3),

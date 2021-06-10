@@ -7,6 +7,8 @@ def get(conn_input):
         schema_name="stage",
         table_name="STG_LOJA",
         columns=[
+            "id_loja",
+            "id_endereco",
             "cnpj",
             "nome_loja",
             "razao_social"

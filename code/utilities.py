@@ -1,6 +1,5 @@
 from sqlalchemy.engine.mock import MockConnection
 
-import numpy as np
 import pandas as pd
 
 
@@ -350,6 +349,82 @@ def insert_default_values_table(df: pd.DataFrame) -> pd.DataFrame:
             "Não Informado"
             for k in df.keys()
         ]
+    )
+
+
+def multiply_columns(frame: pd.DataFrame,
+                     col_1: str,
+                     col_2: str) -> pd.Series:
+    return frame[col_1] * frame[col_2]
+
+
+def create_sk_categoria(column: pd.Series) -> pd.Series:
+    categorias = {
+        1: (
+            "CAFÉ", "ACHOCOLATADO", "CEREAIS", "PÃO", "AÇÚCAR",
+            "SUCO", "ADOÇANTE", "BISCOITOS", "GELÉIA", "IORGUTE"
+        ),
+        2: (
+            "ARROZ", "FEIJÃO", "FARINHA DE TRIGO", "AMIDO DE MILHO", "FERMENTO", "MACARRÃO",
+            "MOLHO DE TOMATE", "AZEITE", "ÓLEO", "OVOS", "TEMPEROS", "SAL", "SAZON"
+        ),
+        3: (
+            "BIFE BOVINO", "FRANGO", "PEIXE", "CARNE MOÍDA", "SALSICHA", "LINGUICA"
+        ),
+        4: (
+            "SUCOS", "CERVEJAS", "REFRIGERANTES", "VINHO"
+        ),
+        5: (
+            "SABONETE", "CREME DENTAL", "SHAMPOO", "CONDICIONADOR", "ABSORVENTE", "PAPEL HIGIÊNICO"
+        ),
+        6: (
+            "LEITE", "PRESUNTO", "QUEIJO", "REQUEIJÃO", "MANTEIGA", "CREME DE LEITE"
+        ),
+        7: (
+            "ÁGUA SANITÁRIA", "SABÃO EM PÓ", "PALHA DE AÇO", "AMACIANTE", "DETERGENTE",
+            "SACO DE LIXO", "DESINFETANTE", "PAPEL TOALHA"
+        ),
+        8: (
+            "ALFACE", "CEBOLA", "ALHO", "TOMATE", "LIMÃO", "BANANA", "MAÇÃ", "BATATA"
+        )
+    }
+
+    def categorized(name: str) -> int:
+        for k, v in categorias.items():
+            if name.upper() in v:
+                return k
+
+        for n in name.split():
+            for k, v in categorias.items():
+                if n.upper() in v:
+                    return k
+
+        return -3
+
+    return column.apply(
+        lambda name:
+        categorized(name)
+    )
+
+
+def create_sk_turno(column: pd.Series) -> pd.Series:
+    turnos = {
+        1: range(6, 12),
+        2: range(12, 18),
+        3: range(18, 24),
+        4: range(0, 6),
+    }
+
+    def categorized(hour: int) -> int:
+        for k, v in turnos.items():
+            if hour in v:
+                return k
+
+        return -3
+
+    return column.apply(
+        lambda hour:
+        categorized(hour)
     )
 
 
