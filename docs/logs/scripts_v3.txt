@@ -1,0 +1,61 @@
+C:\Users\DAVI_\Documents\GitHub\Projeto_DW_Vendas\venv\Scripts\python.exe C:/Users/DAVI_/Documents/GitHub/Projeto_DW_Vendas/code/main.py
+        SK_PRODUTO  SK_CLIENTE  SK_LOJA  SK_FUNCIONARIO  SK_DATA  \
+0               -1          -1       -1              -1       -1   
+1               -2          -2       -2              -2       -2   
+2               -3          -3       -3              -3       -3   
+3               16           5        2               6        1   
+4               16           5        2               6        2   
+...            ...         ...      ...             ...      ...   
+250002          33          -3        1               2   250000   
+250003          33          -3        3               2   250001   
+250004          33          -3        3               2   250002   
+250005          33          -3        3               2   250003   
+250006          33          -3        3               2   250004   
+
+        SK_CATEGORIA  SK_TURNO  SK_TIPO_PAGAMENTO  SK_ENDERECO    CD_NFC  \
+0                 -1        -1                 -1           -1        -1   
+1                 -2        -2                 -2           -2        -2   
+2                 -3        -3                 -3           -3        -3   
+3                  8         3                  7            2  54194228   
+4                  8         2                  7            2  36092825   
+...              ...       ...                ...          ...       ...   
+250002             1         3                  6            1   8704373   
+250003             1         1                  6           30   8704371   
+250004             1         1                  6           30   8704379   
+250005             1         1                  6           30   8705011   
+250006             1         1                  6           30   8705012   
+
+        VL_LIQUIDO  VL_BRUTO  VL_PERCENTUAL_LUCRO  QTD_PRODUTO  
+0            -1.00    -1.000                 -1.0           -1  
+1            -2.00    -2.000                 -2.0           -2  
+2            -3.00    -3.000                 -3.0           -3  
+3            82.10    49.260                  0.6            1  
+4            82.10    49.260                  0.6            4  
+...            ...       ...                  ...          ...  
+250002       23.24    18.592                  0.8            5  
+250003       23.24    18.592                  0.8            1  
+250004       23.24    18.592                  0.8            5  
+250005       23.24    18.592                  0.8            1  
+250006       23.24    18.592                  0.8            3  
+
+[250007 rows x 14 columns]
+SK_PRODUTO               int64
+SK_CLIENTE               int64
+SK_LOJA                  int64
+SK_FUNCIONARIO           int64
+SK_DATA                  int64
+SK_CATEGORIA             int64
+SK_TURNO                 int64
+SK_TIPO_PAGAMENTO        int64
+SK_ENDERECO              int64
+CD_NFC                   int64
+VL_LIQUIDO             float64
+VL_BRUTO               float64
+VL_PERCENTUAL_LUCRO    float64
+QTD_PRODUTO              int64
+dtype: object
+
+Finalizado com sucesso em 154 segundos
+
+
+Process finished with exit code 0
