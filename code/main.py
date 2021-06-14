@@ -68,13 +68,18 @@ if __name__ == "__main__":
     pd.set_option("display.max_columns", None)
 
     conn_db = conn.create_connection_postgre(
-        server="10.0.0.102",
+        server="localhost",
         database="projeto_dw_vendas",
         username="postgres",
         password="itix.123",
         port=5432
     )
 
-    run(conn_db)
+    # run(conn_db)
+
+    stg_produto.get(conn_db).pipe(
+        func=stg_produto.treat,
+        conn_input=conn_db
+    )
 
     print(f"\nFinalizado com sucesso em {round(time() - time_initial)} segundos\n")
