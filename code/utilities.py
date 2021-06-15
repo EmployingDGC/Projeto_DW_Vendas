@@ -140,6 +140,20 @@ def convert_column_to_int64(column_data_frame: pd.Series,
     )
 
 
+def convert_column_to_str(column_data_frame: pd.Series) -> pd.Series:
+    return column_data_frame.apply(
+        lambda value:
+        str(value).strip()
+    )
+
+
+def convert_column_datetime_to_date(column_data_frame: pd.Series) -> pd.Series:
+    return column_data_frame.apply(
+        lambda datetime:
+        str(datetime).split(" ")[0]
+    )
+
+
 def convert_column_to_date(column_data_frame: pd.Series,
                            format_: str,
                            default: str) -> pd.Series:
@@ -460,3 +474,30 @@ def drop_schemas(conn_output: MockConnection,
                  schemas_names: list[str]) -> None:
     for schema in schemas_names:
         conn_output.execute(f" drop schema if exists {schema.lower()}")
+
+
+def delete_register_from_table(conn_output: MockConnection,
+                               schema_name: str,
+                               table_name: str,
+                               where: str) -> None:
+    conn_output.execute(
+        f"delete from \"{schema_name}\".\"{table_name}\" where {where}"
+    )
+
+
+def set_ativo(row: pd.Series) -> pd.Series:
+    row.ativo_x = 0
+    row.ativo_y = 0
+
+    if row.data_cadastro_x > row.data_cadastro_y:
+        row.data_cadastro_x = 1
+
+    else:
+        row.data_cadastro_y = 1
+
+    return row
+
+
+def compare_two_columns(column_1: pd.Series,
+                        column_2: pd.Series) -> pd.Series:
+    return column_1 == column_2

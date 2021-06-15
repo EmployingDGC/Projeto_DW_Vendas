@@ -15,35 +15,82 @@ def treat(frame: pd.DataFrame, conn_input):
     try:
         df_current = utl.convert_table_to_dataframe(
             conn_input=conn_input,
-            schema_name="dw",
-            table_name="D_PRODUTO"
+            schema_name="stage",
+            table_name="STG_PRODUTO"
         )
     except:
         return frame
 
-    join_frame = df_current.merge(
+    filter_x = [
+        "id_produto",
+        "nome_produto_x",
+        "cod_barra_x",
+        "preco_custo_x",
+        "percentual_lucro_x",
+        "data_cadastro_x",
+        "ativo_x"
+    ]
+
+    filter_y = [
+        "id_produto",
+        "nome_produto_y",
+        "cod_barra_y",
+        "preco_custo_y",
+        "percentual_lucro_y",
+        "data_cadastro_y",
+        "ativo_y"
+    ]
+
+    rename_x = {
+        "nome_produto_x": "nome_produto",
+        "cod_barra_x": "cod_barra",
+        "preco_custo_x": "preco_custo",
+        "percentual_lucro_x": "percentual_lucro",
+        "data_cadastro_x": "data_cadastro",
+        "ativo_x": "ativo"
+    }
+
+    rename_y = {
+        "nome_produto_y": "nome_produto",
+        "cod_barra_y": "cod_barra",
+        "preco_custo_y": "preco_custo",
+        "percentual_lucro_y": "percentual_lucro",
+        "data_cadastro_y": "data_cadastro",
+        "ativo_y": "ativo"
+    }
+
+    modified_frame = df_current.merge(
         right=frame,
-        how="left",
-        left_on="CD_PRODUTO",
-        right_on="id_produto"
-    ).iloc[3:].assign(
-        id_produto=lambda df: utl.convert_column_to_int64(df.id_produto, -3),
-        cod_barra=lambda df: utl.convert_column_to_int64(df.cod_barra, -3),
-        preco_custo=lambda df: utl.convert_column_to_float64(df.preco_custo, -3),
-        percentual_lucro=lambda df: utl.convert_column_to_float64(df.percentual_lucro, -3),
-        data_cadastro=lambda df: utl.convert_column_to_date(df.data_cadastro, "%d%m%Y", "01011900"),
-        nome_produto=lambda df: utl.convert_column_to_tittle(df.nome_produto),
-        FL_NEW=lambda df: df.isnull().id_produto
+        how="right",
+        on="id_produto"
+    ).assign(
+        data_cadastro_x=lambda df: utl.convert_column_to_str(
+            utl.convert_column_to_date(df.data_cadastro_x, "%d%m%Y", "01011900")
+        ),
+        data_cadastro_y=lambda df: utl.convert_column_to_str(
+            utl.convert_column_to_date(df.data_cadastro_y, "%d%m%Y", "01011900")
+        )
+    ).pipe(
+        lambda df: df[~utl.compare_two_columns(df.data_cadastro_x, df.data_cadastro_y)]
+    ).assign(
+        FL_NEW=lambda df: df.data_cadastro_x.apply(
+            lambda value: value == "1900-01-01 00:00:00"
+        )
     )
 
-    frame_new = [join_frame[~join_frame.FL_NEW].iloc[i] for i in range(join_frame.shape[0])]
-    join_frame[~join_frame.FL_NEW].apply(
-        lambda row:
-        pd.concat([frame_new, row]),
-        axis=1
+    new_produtcs = modified_frame.pipe(
+        lambda df: df[df.FL_NEW]
+    ).filter(filter_y).rename(rename_y)
+
+    update_products = modified_frame.pipe(
+        lambda df: df[~df.FL_NEW]
     )
 
-    print(frame_new)
+    # print(modified_frame)
+    print("\n" + "-" * 100 + "\n")
+    print(new_produtcs)
+    print("\n" + "-" * 100 + "\n")
+    print(update_products)
 
 def run(conn_input):
     get(conn_input).pipe(
