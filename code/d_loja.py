@@ -11,7 +11,10 @@ def get(conn_input):
             "id_endereco",
             "cnpj",
             "nome_loja",
-            "razao_social"
+            "razao_social",
+            "data_inicial",
+            "data_final",
+            "ativo"
         ]
     )
 
@@ -20,7 +23,10 @@ def treat(frame):
     columns_rename = {
         "cnpj": "CD_CNPJ",
         "nome_loja": "NO_LOJA",
-        "razao_social": "NO_RAZAO_SOCIAL"
+        "razao_social": "NO_RAZAO_SOCIAL",
+        "data_inicial": "DT_INICIAL",
+        "data_final": "DT_FINAL",
+        "ativo": "FL_ATIVO"
     }
 
     order_columns = [
@@ -28,7 +34,10 @@ def treat(frame):
         "CD_CNPJ",
         "DS_CNPJ",
         "NO_LOJA",
-        "NO_RAZAO_SOCIAL"
+        "NO_RAZAO_SOCIAL",
+        "DT_INICIAL",
+        "DT_FINAL",
+        "FL_ATIVO"
     ]
 
     return frame.assign(

@@ -11,7 +11,7 @@ def get(conn_input):
     )
 
 
-def treat(frame: pd.DataFrame, conn_input):
+def treat(frame, conn_input):
     try:
         df_current = utl.convert_table_to_dataframe(
             conn_input=conn_input,
