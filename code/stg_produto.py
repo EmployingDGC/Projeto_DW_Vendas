@@ -59,6 +59,15 @@ def treat(frame: pd.DataFrame, conn_input):
         "ativo_y": "ativo"
     }
 
+    filter_drop = [
+        "id_produto",
+        "nome_produto",
+        "cod_barra",
+        "preco_custo",
+        "percentual_lucro",
+        "data_cadastro"
+    ]
+
     modified_frame = df_current.merge(
         right=frame,
         how="right",
@@ -78,19 +87,52 @@ def treat(frame: pd.DataFrame, conn_input):
         )
     )
 
-    new_produtcs = modified_frame.pipe(
-        lambda df: df[df.FL_NEW]
-    ).filter(filter_y).rename(rename_y)
+    if modified_frame.empty:
+        return modified_frame
 
-    update_products = modified_frame.pipe(
-        lambda df: df[~df.FL_NEW]
+    new_produtcs = pd.concat([
+        modified_frame.pipe(
+            lambda df: df[df.FL_NEW]
+        ).filter(filter_y).rename(columns=rename_y),
+        modified_frame.pipe(
+            lambda df: df[~df.FL_NEW]
+        ).pipe(
+            lambda df: df.apply(
+                lambda row: utl.set_ativo(row),
+                axis=1
+            )
+        ).pipe(
+            lambda df: pd.concat([
+                df.filter(filter_x).rename(columns=rename_x),
+                df.filter(filter_y).rename(columns=rename_y)
+            ])
+        )
+    ]).assign(
+        FL_ATIVO=lambda df: df.ativo.apply(
+            lambda value: int(value) == 1
+        ),
+        data_cadastro=lambda df: utl.convert_column_datetime_to_date(df.data_cadastro).apply(
+            lambda row: f"{str(row).split('-')[2]}/{str(row).split('-')[1]}/{str(row).split('-')[0]}"
+        )
+    ).pipe(
+        lambda df: df.drop_duplicates(filter_drop)
     )
 
-    # print(modified_frame)
-    print("\n" + "-" * 100 + "\n")
+    new_produtcs.pipe(
+        lambda df: df[~df.FL_ATIVO]
+    ).apply(
+        lambda row: utl.delete_register_from_table(
+            conn_output=conn_input,
+            schema_name="stage",
+            table_name="STG_PRODUTO",
+            where=f"id_produto = {row.id_produto}"
+        ),
+        axis=1
+    )
+
     print(new_produtcs)
-    print("\n" + "-" * 100 + "\n")
-    print(update_products)
+
+    return new_produtcs.drop(columns=["FL_ATIVO"])
 
 def run(conn_input):
     get(conn_input).pipe(

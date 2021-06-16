@@ -77,9 +77,6 @@ if __name__ == "__main__":
 
     # run(conn_db)
 
-    stg_produto.get(conn_db).pipe(
-        func=stg_produto.treat,
-        conn_input=conn_db
-    )
+    stg_produto.run(conn_db)
 
     print(f"\nFinalizado com sucesso em {round(time() - time_initial)} segundos\n")

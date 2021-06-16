@@ -490,10 +490,10 @@ def set_ativo(row: pd.Series) -> pd.Series:
     row.ativo_y = 0
 
     if row.data_cadastro_x > row.data_cadastro_y:
-        row.data_cadastro_x = 1
+        row.ativo_x = 1
 
     else:
-        row.data_cadastro_y = 1
+        row.ativo_y = 1
 
     return row
 
