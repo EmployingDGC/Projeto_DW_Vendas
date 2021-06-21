@@ -68,7 +68,7 @@ if __name__ == "__main__":
     pd.set_option("display.max_columns", None)
 
     conn_db = conn.create_connection_postgre(
-        server="localhost",
+        server="10.0.0.105",
         database="projeto_dw_vendas",
         username="postgres",
         password="itix.123",

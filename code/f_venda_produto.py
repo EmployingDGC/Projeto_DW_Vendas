@@ -178,7 +178,7 @@ def treat(frame, connection):
             ).percentual_lucro,
             default=-3
         ),
-        VL_BRUTO=lambda df: utl.multiply_columns(df, "VL_LIQUIDO", "VL_PERCENTUAL_LUCRO")
+        VL_BRUTO=lambda df: df.VL_LIQUIDO * df.VL_PERCENTUAL_LUCRO + df.VL_LIQUIDO
     ).assign(
         id_cliente=lambda df: utl.convert_column_to_int64(df.id_cliente, -3),
         SK_TURNO=lambda df: utl.create_sk_turno(df.SK_TURNO)
