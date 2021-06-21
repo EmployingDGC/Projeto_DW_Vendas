@@ -1,4 +1,5 @@
 from sqlalchemy.engine.mock import MockConnection
+import datetime as dt
 
 import pandas as pd
 
@@ -501,3 +502,43 @@ def set_ativo(row: pd.Series) -> pd.Series:
 def compare_two_columns(column_1: pd.Series,
                         column_2: pd.Series) -> pd.Series:
     return column_1 == column_2
+
+
+def generate_date_table(initial_date: str,
+                        final_date: str) -> pd.DataFrame:
+    format_date = "%d-%m-%Y"
+
+    order_columns = [
+        "SK_DATA",
+        "DT_REFERENCIA",
+        "DT_ANO",
+        "DT_MES",
+        "DT_DIA",
+        "DT_HORA"
+    ]
+
+    start = dt.datetime.strptime(initial_date, format_date)
+    end = dt.datetime.strptime(final_date, format_date)
+    date_generated = [
+        (start + dt.timedelta(days=d)).strftime(format_date) +
+        f" {y:02}:00:00" for d in range((end - start).days) for y in range(24)
+    ]
+
+    return pd.DataFrame({
+        "DT_REFERENCIA": date_generated
+    }).assign(
+        SK_DATA=lambda df: create_index_dataframe(df, 1),
+        # DT_REFERENCIA=lambda df: df.DT_REFERENCIA.astype("datetime64[ns]"),
+        DT_ANO=lambda df: df.DT_REFERENCIA.apply(
+            lambda value: str(value).split(" ")[0].split("-")[2]
+        ).astype("int64"),
+        DT_MES=lambda df: df.DT_REFERENCIA.apply(
+            lambda value: str(value).split(" ")[0].split("-")[1]
+        ).astype("int64"),
+        DT_DIA=lambda df: df.DT_REFERENCIA.apply(
+            lambda value: str(value).split(" ")[0].split("-")[0]
+        ).astype("int64"),
+        DT_HORA=lambda df: df.DT_REFERENCIA.apply(
+            lambda value: str(value).split(" ")[1].split(":")[0]
+        ).astype("int64")
+    ).filter(order_columns)

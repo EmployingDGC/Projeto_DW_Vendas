@@ -44,16 +44,16 @@ def treat(frame, connection):
     }
 
     order_columns = [
-        "SK_PRODUTO",  #
-        "SK_CLIENTE",  #
-        "SK_LOJA",  #
-        "SK_FUNCIONARIO",  #
-        "SK_DATA",  #
-        "SK_CATEGORIA",  #
-        "SK_TURNO",  #
-        "SK_TIPO_PAGAMENTO",  #
-        "SK_ENDERECO",  #
-        "CD_NFC",  #
+        "SK_PRODUTO",
+        "SK_CLIENTE",
+        "SK_LOJA",
+        "SK_FUNCIONARIO",
+        "SK_DATA",
+        "SK_CATEGORIA",
+        "SK_TURNO",
+        "SK_TIPO_PAGAMENTO",
+        "SK_ENDERECO",
+        "CD_NFC",
         "VL_LIQUIDO",
         "VL_BRUTO",
         "VL_PERCENTUAL_LUCRO",
