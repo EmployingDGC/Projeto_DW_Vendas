@@ -521,7 +521,7 @@ def generate_date_table(initial_date: str,
     end = dt.datetime.strptime(final_date, format_date)
     date_generated = [
         (start + dt.timedelta(days=d)).strftime(format_date) +
-        f" {y:02}:00:00" for d in range((end - start).days) for y in range(24)
+        f" {h:02}:00:00" for d in range((end - start).days) for h in range(24)
     ]
 
     return pd.DataFrame({
