@@ -189,9 +189,8 @@ def treat(frame, conn_output):
         axis=1
     )
 
-    print(stores.filter(filter_final).drop_duplicates(subset=filter_drop_duplicates))
-
     return stores.filter(filter_final).drop_duplicates(subset=filter_drop_duplicates)
+
 
 def run(conn_input):
     get(conn_input).pipe(

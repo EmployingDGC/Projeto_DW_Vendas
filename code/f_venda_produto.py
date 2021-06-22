@@ -16,7 +16,6 @@ import d_funcionario
 import d_loja
 import d_produto
 import d_tipo_pagamento
-import d_turno
 
 
 def get(conn_input):
@@ -50,7 +49,6 @@ def treat(frame, connection):
         "SK_FUNCIONARIO",
         "SK_DATA",
         "SK_CATEGORIA",
-        "SK_TURNO",
         "SK_TIPO_PAGAMENTO",
         "SK_ENDERECO",
         "CD_NFC",
@@ -59,6 +57,17 @@ def treat(frame, connection):
         "VL_PERCENTUAL_LUCRO",
         "QTD_PRODUTO"
     ]
+
+    datas = utl.convert_table_to_dataframe(
+        conn_input=connection,
+        schema_name="dw",
+        table_name="D_DATA",
+        columns=["SK_DATA", "DT_REFERENCIA"]
+    ).iloc[3:].assign(
+        data_hora=lambda df: df.DT_REFERENCIA.apply(
+            lambda value: str(value).split(":")[0]
+        )
+    )
 
     return frame.assign(
         id_pagamento=lambda df: utl.convert_column_to_int64(
@@ -92,7 +101,22 @@ def treat(frame, connection):
             default=-3
         ),
         nfc=lambda df: utl.convert_column_to_int64(df.nfc, -3),
-        SK_DATA=lambda df: stg_venda.get(connection).id_venda,
+        SK_DATA=lambda df: (
+            utl.convert_table_to_dataframe(
+                conn_input=connection,
+                schema_name="stage",
+                table_name="STG_VENDA",
+                columns=["data_venda"]
+            ).assign(
+                data_hora=lambda df2: df2.data_venda.apply(
+                    lambda value: str(value).split(":")[0]
+                )
+            ).merge(
+                right=datas,
+                how="left",
+                on="data_hora"
+            ).SK_DATA
+        ),
         SK_PRODUTO=lambda df: utl.convert_column_to_int64(
             column_data_frame=stg_venda.get(connection).merge(
                 right=stg_item_venda.get(connection),
@@ -132,19 +156,6 @@ def treat(frame, connection):
                 left_on="SK_PRODUTO"
             ).NO_PRODUTO
         ),
-        SK_TURNO=lambda df: df.merge(
-            right=utl.convert_table_to_dataframe(
-                conn_input=connection,
-                schema_name="dw",
-                table_name="D_DATA",
-                columns=[
-                    "SK_DATA",
-                    "DT_HORA"
-                ]
-            ),
-            how="inner",
-            on="SK_DATA",
-        ).DT_HORA,
         QTD_PRODUTO=lambda df: utl.convert_column_to_int64(
             column_data_frame=stg_venda.get(connection).merge(
                 right=stg_item_venda.get(connection),
@@ -180,8 +191,7 @@ def treat(frame, connection):
         ),
         VL_BRUTO=lambda df: df.VL_LIQUIDO * df.VL_PERCENTUAL_LUCRO + df.VL_LIQUIDO
     ).assign(
-        id_cliente=lambda df: utl.convert_column_to_int64(df.id_cliente, -3),
-        SK_TURNO=lambda df: utl.create_sk_turno(df.SK_TURNO)
+        id_cliente=lambda df: utl.convert_column_to_int64(df.id_cliente, -3)
     ).rename(
         columns=columns_rename
     ).pipe(

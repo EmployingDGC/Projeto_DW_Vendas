@@ -23,7 +23,6 @@ import d_funcionario
 import d_loja
 import d_produto
 import d_tipo_pagamento
-import d_turno
 
 import f_venda_produto
 
@@ -48,7 +47,6 @@ def run_dms(conn_output):
     d_loja.run(conn_output)
     d_produto.run(conn_output)
     d_tipo_pagamento.run(conn_output)
-    d_turno.run(conn_output)
 
 
 def run_fact(conn_output):
@@ -76,8 +74,5 @@ if __name__ == "__main__":
     )
 
     run(conn_db)
-
-    # stg_loja.run(conn_db)
-    # stg_loja.run(conn_db)
 
     print(f"\nFinalizado com sucesso em {round(time() - time_initial)} segundos\n")

@@ -506,7 +506,7 @@ def compare_two_columns(column_1: pd.Series,
 
 def generate_date_table(initial_date: str,
                         final_date: str) -> pd.DataFrame:
-    format_date = "%d-%m-%Y"
+    format_date = "%Y-%m-%d"
 
     order_columns = [
         "SK_DATA",
@@ -530,13 +530,13 @@ def generate_date_table(initial_date: str,
         SK_DATA=lambda df: create_index_dataframe(df, 1),
         # DT_REFERENCIA=lambda df: df.DT_REFERENCIA.astype("datetime64[ns]"),
         DT_ANO=lambda df: df.DT_REFERENCIA.apply(
-            lambda value: str(value).split(" ")[0].split("-")[2]
+            lambda value: str(value).split(" ")[0].split("-")[0]
         ).astype("int64"),
         DT_MES=lambda df: df.DT_REFERENCIA.apply(
             lambda value: str(value).split(" ")[0].split("-")[1]
         ).astype("int64"),
         DT_DIA=lambda df: df.DT_REFERENCIA.apply(
-            lambda value: str(value).split(" ")[0].split("-")[0]
+            lambda value: str(value).split(" ")[0].split("-")[2]
         ).astype("int64"),
         DT_HORA=lambda df: df.DT_REFERENCIA.apply(
             lambda value: str(value).split(" ")[1].split(":")[0]

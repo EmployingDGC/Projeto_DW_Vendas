@@ -130,9 +130,8 @@ def treat(frame, conn_input):
         axis=1
     )
 
-    print(new_produtcs)
-
     return new_produtcs.drop(columns=["FL_ATIVO"])
+
 
 def run(conn_input):
     get(conn_input).pipe(
