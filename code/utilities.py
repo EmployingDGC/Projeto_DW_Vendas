@@ -423,14 +423,14 @@ def create_sk_categoria(column: pd.Series) -> pd.Series:
 
 
 def create_sk_turno(column: pd.Series) -> pd.Series:
-    turnos = {
-        1: range(6, 12),
-        2: range(12, 18),
-        3: range(18, 24),
-        4: range(0, 6),
-    }
-
     def categorized(hour: int) -> int:
+        turnos = {
+            1: range(6, 12),
+            2: range(12, 18),
+            3: range(18, 24),
+            4: range(0, 6),
+        }
+
         for k, v in turnos.items():
             if hour in v:
                 return k
