@@ -1,27 +1,36 @@
-import pandas as pd
-
 import utilities as utl
-
-import numpy as np
+import DW_TOOLS as dwt
 
 import stg_venda
 import stg_item_venda
 import stg_produto
 
-import d_categoria
 import d_cliente
-import d_data
-import d_endereco
 import d_funcionario
 import d_loja
 import d_produto
 import d_tipo_pagamento
 
 
+# def get(conn_input):
+#     return utl.convert_table_to_dataframe(
+#         conn_input=conn_input,
+#         schema_name="stage",
+#         table_name="STG_VENDA",
+#         columns=[
+#             "id_pagamento",
+#             "id_cliente",
+#             "id_func",
+#             "id_loja",
+#             "nfc"
+#         ]
+#     )
+
+
 def get(conn_input):
-    return utl.convert_table_to_dataframe(
-        conn_input=conn_input,
-        schema_name="stage",
+    return dwt.read_table(
+        conn=conn_input,
+        schema="stage",
         table_name="STG_VENDA",
         columns=[
             "id_pagamento",

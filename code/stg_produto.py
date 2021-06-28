@@ -1,21 +1,36 @@
 import utilities as utl
+import DW_TOOLS as dwt
 
 import pandas as pd
 
 
+# def get(conn_input):
+#     return utl.convert_table_to_dataframe(
+#         conn_input=conn_input,
+#         schema_name="public",
+#         table_name="PRODUTO"
+#     )
+
+
 def get(conn_input):
-    return utl.convert_table_to_dataframe(
-        conn_input=conn_input,
-        schema_name="public",
+    return dwt.read_table(
+        conn=conn_input,
+        schema="public",
         table_name="PRODUTO"
     )
 
 
 def treat(frame, conn_input):
     try:
-        df_current = utl.convert_table_to_dataframe(
-            conn_input=conn_input,
-            schema_name="stage",
+        # df_current = utl.convert_table_to_dataframe(
+        #     conn_input=conn_input,
+        #     schema_name="stage",
+        #     table_name="STG_PRODUTO"
+        # )
+
+        df_current = dwt.read_table(
+            conn=conn_input,
+            schema="stage",
             table_name="STG_PRODUTO"
         )
     except:

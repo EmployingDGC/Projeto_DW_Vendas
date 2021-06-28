@@ -1,10 +1,29 @@
 import utilities as utl
+import DW_TOOLS as dwt
+
+
+# def get(conn_input):
+#     return utl.convert_table_to_dataframe(
+#         conn_input=conn_input,
+#         schema_name="stage",
+#         table_name="STG_LOJA",
+#         columns=[
+#             "id_loja",
+#             "id_endereco",
+#             "cnpj",
+#             "nome_loja",
+#             "razao_social",
+#             "data_inicial",
+#             "data_final",
+#             "ativo"
+#         ]
+#     )
 
 
 def get(conn_input):
-    return utl.convert_table_to_dataframe(
-        conn_input=conn_input,
-        schema_name="stage",
+    return dwt.read_table(
+        conn=conn_input,
+        schema="stage",
         table_name="STG_LOJA",
         columns=[
             "id_loja",

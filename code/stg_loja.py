@@ -1,22 +1,38 @@
 import pandas as pd
 
 import utilities as utl
+import DW_TOOLS as dwt
 
 from datetime import date
 
+
+# def get(conn_input):
+#     return utl.convert_table_to_dataframe(
+#         conn_input=conn_input,
+#         schema_name="public",
+#         table_name="LOJA"
+#     )
+
+
 def get(conn_input):
-    return utl.convert_table_to_dataframe(
-        conn_input=conn_input,
-        schema_name="public",
+    return dwt.read_table(
+        conn=conn_input,
+        schema="public",
         table_name="LOJA"
     )
 
 
 def treat(frame, conn_output):
     try:
-        df_current = utl.convert_table_to_dataframe(
-            conn_input=conn_output,
-            schema_name="stage",
+        # df_current = utl.convert_table_to_dataframe(
+        #     conn_input=conn_output,
+        #     schema_name="stage",
+        #     table_name="STG_LOJA"
+        # )
+
+        df_current = dwt.read_table(
+            conn=conn_output,
+            schema="stage",
             table_name="STG_LOJA"
         )
     except:
