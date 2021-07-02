@@ -103,7 +103,9 @@ def treat(frame, connection):
         ),
         id_loja=lambda df: utl.convert_column_to_int64(
             column_data_frame=df.merge(
-                right=d_loja.get(connection),
+                right=d_loja.get(connection).pipe(
+                    lambda df1: df1[df1["ativo"] == 1]
+                ),
                 how="inner",
                 on="id_loja"
             ).id_loja,
