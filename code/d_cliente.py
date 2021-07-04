@@ -29,13 +29,9 @@ def get(conn_input):
 
 
 def treat(frame):
-    columns_rename = {
-        "cpf": "CD_CPF",
-        "nome": "NO_CLIENTE"
-    }
-
     order_columns = [
         "SK_CLIENTE",
+        "CD_CLIENTE",
         "CD_CPF",
         "DS_CPF",
         "NO_CLIENTE"
@@ -44,12 +40,11 @@ def treat(frame):
     return frame.drop_duplicates(
         subset=["cpf", "nome"]
     ).assign(
-        nome=lambda df: utl.convert_column_to_tittle(df.nome),
-        cpf=lambda df: utl.convert_column_cpf_to_int64(df.cpf, -3),
-        DS_CPF=lambda df: utl.convert_int_cpf_to_format_cpf(df.cpf),
+        NO_CLIENTE=lambda df: utl.convert_column_to_tittle(df.nome),
+        CD_CPF=lambda df: utl.convert_column_cpf_to_int64(df.cpf, -3),
+        DS_CPF=lambda df: utl.convert_int_cpf_to_format_cpf(df.CD_CPF),
+        CD_CLIENTE=lambda df: utl.convert_column_to_int64(df.id_cliente, -3),
         SK_CLIENTE=lambda df: utl.create_index_dataframe(df, 1)
-    ).rename(
-        columns=columns_rename
     ).pipe(
         func=utl.insert_default_values_table
     ).filter(

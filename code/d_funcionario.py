@@ -30,12 +30,14 @@ def get(conn_input):
 
 def treat(frame):
     columns_rename = {
+        "id_funcionario": "CD_FUNCIONARIO",
         "cpf": "CD_CPF",
         "nome": "NO_FUNCIONARIO"
     }
 
     order_columns = [
         "SK_FUNCIONARIO",
+        "CD_FUNCIONARIO",
         "CD_CPF",
         "DS_CPF",
         "NO_FUNCIONARIO"

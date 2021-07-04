@@ -73,19 +73,6 @@ if __name__ == "__main__":
         port=5432
     )
 
-    # run(conn_db)
-
-    run_fact(conn_db)
-
-    # teste = {
-    #     "ativo": [1, 0, 0, 0, 1],
-    #     "ds": ["s", "n", "n", "n", "s"]
-    # }
-    #
-    # df = pd.DataFrame(teste).pipe(
-    #     lambda df1: df1[df1["ativo"] == 1]
-    # )
-    #
-    # print(df)
+    run(conn_db)
 
     print(f"\nFinalizado com sucesso em {round(time() - time_initial)} segundos\n")

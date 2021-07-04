@@ -30,19 +30,19 @@ def get(conn_input):
 
 def treat(frame):
     columns_rename = {
+        "id_pagamento": "CD_PAGAMENTO",
         "nome": "NO_PAGAMENTO",
         "descricao": "DS_PAGAMENTO"
     }
 
     order_columns = [
         "SK_PAGAMENTO",
+        "CD_PAGAMENTO",
         "NO_PAGAMENTO",
         "DS_PAGAMENTO"
     ]
 
-    return frame.drop_duplicates(
-        subset=["nome", "descricao"]
-    ).assign(
+    return frame.assign(
         nome=lambda df: utl.convert_column_to_upper(df.nome),
         descricao=lambda df: utl.convert_column_to_upper(df.descricao),
         SK_PAGAMENTO=lambda df: utl.create_index_dataframe(df, 1)

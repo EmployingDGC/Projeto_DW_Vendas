@@ -40,6 +40,8 @@ def get(conn_input):
 
 def treat(frame):
     columns_rename = {
+        "id_loja": "CD_LOJA",
+        "id_endereco": "CD_ENDERECO",
         "cnpj": "CD_CNPJ",
         "nome_loja": "NO_LOJA",
         "razao_social": "NO_RAZAO_SOCIAL",
@@ -50,6 +52,8 @@ def treat(frame):
 
     order_columns = [
         "SK_LOJA",
+        "CD_LOJA",
+        "CD_ENDERECO",
         "CD_CNPJ",
         "DS_CNPJ",
         "NO_LOJA",
