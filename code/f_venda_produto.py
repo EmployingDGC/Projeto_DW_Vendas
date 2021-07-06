@@ -54,7 +54,7 @@ def treat(frame, connection):
         "QTD_PRODUTO"
     ]
 
-    teste = frame.assign(
+    return frame.assign(
         SK_PRODUTO=lambda df: utl.convert_column_to_int64(
             column_data_frame=df.merge(
                 right=dwt.read_table(
@@ -151,12 +151,12 @@ def treat(frame, connection):
                     conn=connection,
                     schema="dw",
                     table_name="D_TIPO_PAGAMENTO",
-                    columns=["SK_PAGAMENTO", "CD_PAGAMENTO"]
+                    columns=["SK_TIPO_PAGAMENTO", "CD_TIPO_PAGAMENTO"]
                 ),
                 how="left",
                 left_on="id_pagamento",
-                right_on="CD_PAGAMENTO"
-            ).SK_PAGAMENTO,
+                right_on="CD_TIPO_PAGAMENTO"
+            ).SK_TIPO_PAGAMENTO,
             default=-3
         ),
         SK_ENDERECO=lambda df: utl.convert_column_to_int64(
@@ -224,8 +224,6 @@ def treat(frame, connection):
         items=order_columns
     )
 
-    print(teste)
-
 
 def run(conn_input):
     utl.create_schema(conn_input, "dw")
@@ -233,16 +231,11 @@ def run(conn_input):
     get(conn_input).pipe(
         func=treat,
         connection=conn_input
+    ).to_sql(
+        name="F_VENDA_PRODUTO",
+        con=conn_input,
+        schema="dw",
+        if_exists="replace",
+        index=False,
+        chunksize=10000
     )
-
-    # get(conn_input).pipe(
-    #     func=treat,
-    #     connection=conn_input
-    # ).to_sql(
-    #     name="F_VENDA_PRODUTO",
-    #     con=conn_input,
-    #     schema="dw",
-    #     if_exists="replace",
-    #     index=False,
-    #     chunksize=10000
-    # )
