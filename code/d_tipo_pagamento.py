@@ -29,25 +29,18 @@ def get(conn_input):
 
 
 def treat(frame):
-    columns_rename = {
-        "id_pagamento": "CD_PAGAMENTO",
-        "nome": "NO_PAGAMENTO",
-        "descricao": "DS_PAGAMENTO"
-    }
-
     order_columns = [
-        "SK_PAGAMENTO",
-        "CD_PAGAMENTO",
-        "NO_PAGAMENTO",
-        "DS_PAGAMENTO"
+        "SK_TIPO_PAGAMENTO",
+        "CD_TIPO_PAGAMENTO",
+        "NO_TIPO_PAGAMENTO",
+        "DS_TIPO_PAGAMENTO"
     ]
 
     return frame.assign(
-        nome=lambda df: utl.convert_column_to_upper(df.nome),
-        descricao=lambda df: utl.convert_column_to_upper(df.descricao),
-        SK_PAGAMENTO=lambda df: utl.create_index_dataframe(df, 1)
-    ).rename(
-        columns=columns_rename
+        CD_TIPO_PAGAMENTO=lambda df: df.id_pagamento,
+        NO_TIPO_PAGAMENTO=lambda df: utl.convert_column_to_upper(df.nome),
+        DS_TIPO_PAGAMENTO=lambda df: utl.convert_column_to_upper(df.descricao),
+        SK_TIPO_PAGAMENTO=lambda df: utl.create_index_dataframe(df, 1)
     ).pipe(
         func=utl.insert_default_values_table
     ).filter(
