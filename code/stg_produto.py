@@ -149,6 +149,8 @@ def treat(frame, conn_input):
 
 
 def run(conn_input):
+    utl.create_schema(conn_input, "stage")
+
     get(conn_input).pipe(
         func=treat,
         conn_input=conn_input

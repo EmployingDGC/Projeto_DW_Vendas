@@ -22,6 +22,8 @@ def get(conn_input):
 
 
 def run(conn_input):
+    utl.create_schema(conn_input, "stage")
+
     dwt.create_stage(
         conn_input=conn_input,
         conn_output=conn_input,

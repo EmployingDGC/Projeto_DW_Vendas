@@ -1,0 +1,15 @@
+F_VENDA_PRODUTO
+"SK_DATA"=47315
+
+D_DATA
+"SK_DATA"=47315
+
+D_PRODUTO
+"SK_PRODUTO"=7 or "SK_PRODUTO"=8 or "SK_PRODUTO"=9 or "SK_PRODUTO"=10 or "SK_PRODUTO"=11 or "SK_PRODUTO"=12 or "SK_PRODUTO"=17 or "SK_PRODUTO"=18 or "SK_PRODUTO"=19 or "SK_PRODUTO"=21 or "SK_PRODUTO"=26 or "SK_PRODUTO"=28 or "SK_PRODUTO"=29 or "SK_PRODUTO"=32 or "SK_PRODUTO"=33 or "SK_PRODUTO"=34 or "SK_PRODUTO"=35 or "SK_PRODUTO"=38 or "SK_PRODUTO"=39 or "SK_PRODUTO"=41 or "SK_PRODUTO"=42 or "SK_PRODUTO"=44 or "SK_PRODUTO"=46 or "SK_PRODUTO"=47 or "SK_PRODUTO"=48 or "SK_PRODUTO"=52 or "SK_PRODUTO"=54 or "SK_PRODUTO"=60
+
+VENDA
+data_venda like '2021-05-25 10%'
+
+ITEM_VENDA
+id_venda=982 or id_venda=15354 or id_venda=37526 or id_venda=45131 or id_venda=54632 or id_venda=74756 or id_venda=95656 or id_venda=123212 or id_venda=137706 or id_venda=168604 or id_venda=173840 or id_venda=192442 or id_venda=225033 or id_venda=241795 or id_venda=248546
+

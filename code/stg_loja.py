@@ -4,6 +4,7 @@ import utilities as utl
 import DW_TOOLS as dwt
 
 from datetime import date
+from datetime import datetime
 
 
 # def get(conn_input):
@@ -36,7 +37,20 @@ def treat(frame, conn_output):
             table_name="STG_LOJA"
         )
     except:
-        return frame
+        return frame.assign(
+            data_inicial=lambda df: df.apply(
+                lambda row: datetime.now().strftime('%d/%m/%Y'),
+                axis=1
+            ),
+            data_final=lambda df: df.apply(
+                lambda row: None,
+                axis=1
+            ),
+            ativo=lambda df: df.apply(
+                lambda row: 1,
+                axis=1
+            )
+        )
 
     filter_x = [
         "id_loja",
@@ -105,58 +119,61 @@ def treat(frame, conn_output):
         "ativo_y": "ativo"
     }
 
-    modified_frame = df_current.merge(
-        right=frame,
-        how="right",
-        on="id_loja"
-    ).rename(
-        columns={"data_inicial": "data_inicial_x", "data_final": "data_final_x", "ativo": "ativo_x"}
-    ).assign(
-        data_inicial_x=lambda df: utl.convert_column_to_str(
-            utl.convert_column_to_date(df.data_inicial_x, "%d%m%Y", "01011900")
-        ),
-        data_inicial_y=lambda df: utl.convert_column_to_str(
-            utl.convert_column_to_date(
-                column_data_frame=df.data_inicial_x.apply(
-                    lambda value:
-                    f"{str(date.today()).split('-')[2]}/"
-                    f"{str(date.today()).split('-')[1]}/"
-                    f"{str(date.today()).split('-')[0]}"
+    try:
+        modified_frame = df_current.merge(
+            right=frame,
+            how="right",
+            on="id_loja"
+        ).rename(
+            columns={"data_inicial": "data_inicial_x", "data_final": "data_final_x", "ativo": "ativo_x"}
+        ).assign(
+            data_inicial_x=lambda df: utl.convert_column_to_str(
+                utl.convert_column_to_date(df.data_inicial_x, "%d%m%Y", "01011900")
+            ),
+            data_inicial_y=lambda df: utl.convert_column_to_str(
+                utl.convert_column_to_date(
+                    column_data_frame=df.data_inicial_x.apply(
+                        lambda value:
+                        f"{str(date.today()).split('-')[2]}/"
+                        f"{str(date.today()).split('-')[1]}/"
+                        f"{str(date.today()).split('-')[0]}"
+                    ),
+                    format_="%d%m%Y",
+                    default="01011900"
+                )
+            ),
+            data_final_y=lambda df: df.data_inicial_x.apply(
+                lambda value: None
+            ),
+            FL_TRASH=lambda df: df.apply(
+                lambda row: (
+                        row.nome_loja_x == row.nome_loja_y and
+                        row.razao_social_x == row.razao_social_y and
+                        row.cnpj_x == row.cnpj_y and
+                        row.telefone_x == row.telefone_y and
+                        row.id_endereco_x == row.id_endereco_y
                 ),
-                format_="%d%m%Y",
-                default="01011900"
+                axis=1
             )
-        ),
-        data_final_y=lambda df: df.data_inicial_x.apply(
-            lambda value: None
-        ),
-        FL_TRASH=lambda df: df.apply(
-            lambda row: (
-                row.nome_loja_x == row.nome_loja_y and
-                row.razao_social_x == row.razao_social_y and
-                row.cnpj_x == row.cnpj_y and
-                row.telefone_x == row.telefone_y and
-                row.id_endereco_x == row.id_endereco_y
+        ).pipe(
+            lambda df: df[~df.FL_TRASH]
+        ).assign(
+            FL_NEW=lambda df: df.apply(
+                lambda row: (
+                        str(row.nome_loja_x) == "nan" and
+                        str(row.razao_social_x) == "nan" and
+                        str(row.cnpj_x) == "nan" and
+                        str(row.telefone_x) == "nan" and
+                        str(row.id_endereco_x) == "nan"
+                ),
+                axis=1
             ),
-            axis=1
+            ativo_y=lambda df: df.data_inicial_y.apply(
+                lambda value: 1
+            )
         )
-    ).pipe(
-        lambda df: df[~df.FL_TRASH]
-    ).assign(
-        FL_NEW=lambda df: df.apply(
-            lambda row: (
-                str(row.nome_loja_x) == "nan" and
-                str(row.razao_social_x) == "nan" and
-                str(row.cnpj_x) == "nan" and
-                str(row.telefone_x) == "nan" and
-                str(row.id_endereco_x) == "nan"
-            ),
-            axis=1
-        ),
-        ativo_y=lambda df: df.data_inicial_y.apply(
-            lambda value: 1
-        )
-    )
+    except:
+        return pd.DataFrame(columns=df_current.keys().tolist())
 
     stores = pd.concat([
         modified_frame.pipe(
@@ -209,6 +226,8 @@ def treat(frame, conn_output):
 
 
 def run(conn_input):
+    utl.create_schema(conn_input, "stage")
+
     get(conn_input).pipe(
         func=treat,
         conn_output=conn_input
