@@ -73,6 +73,8 @@ if __name__ == "__main__":
         port=5432
     )
 
-    run(conn_db)
+    # run(conn_db)
+
+    run_fact(conn_db)
 
     print(f"\nFinalizado com sucesso em {round(time() - time_initial)} segundos\n")

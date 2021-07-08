@@ -46,7 +46,8 @@ def treat(frame, connection):
         "SK_DATA",
         "SK_CATEGORIA",
         "SK_TIPO_PAGAMENTO",
-        "SK_ENDERECO",
+        "SK_ENDERECO_LOJA",
+        "SK_ENDERECO_CLIENTE",
         "CD_NFC",
         "VL_LIQUIDO",
         "VL_BRUTO",
@@ -159,7 +160,7 @@ def treat(frame, connection):
             ).SK_TIPO_PAGAMENTO,
             default=-3
         ),
-        SK_ENDERECO=lambda df: utl.convert_column_to_int64(
+        SK_ENDERECO_LOJA=lambda df: utl.convert_column_to_int64(
             column_data_frame=df.merge(
                 right=dwt.read_table(
                     conn=connection,
@@ -169,6 +170,28 @@ def treat(frame, connection):
                 ),
                 how="left",
                 on="SK_LOJA"
+            ).merge(
+                right=dwt.read_table(
+                    conn=connection,
+                    schema="dw",
+                    table_name="D_ENDERECO",
+                    columns=["SK_ENDERECO", "CD_ENDERECO"]
+                ),
+                how="left",
+                on="CD_ENDERECO"
+            ).SK_ENDERECO,
+            default=-3
+        ),
+        SK_ENDERECO_CLIENTE=lambda df: utl.convert_column_to_int64(
+            column_data_frame=df.merge(
+                right=dwt.read_table(
+                    conn=connection,
+                    schema="dw",
+                    table_name="D_CLIENTE",
+                    columns=["SK_CLIENTE", "CD_ENDERECO"]
+                ),
+                how="left",
+                on="SK_CLIENTE"
             ).merge(
                 right=dwt.read_table(
                     conn=connection,

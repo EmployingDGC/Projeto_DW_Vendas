@@ -23,7 +23,8 @@ def get(conn_input):
         columns=[
             "id_cliente",
             "cpf",
-            "nome"
+            "nome",
+            "id_endereco",
         ]
     )
 
@@ -32,6 +33,7 @@ def treat(frame):
     order_columns = [
         "SK_CLIENTE",
         "CD_CLIENTE",
+        "CD_ENDERECO",
         "CD_CPF",
         "DS_CPF",
         "NO_CLIENTE"
@@ -44,6 +46,7 @@ def treat(frame):
         CD_CPF=lambda df: utl.convert_column_cpf_to_int64(df.cpf, -3),
         DS_CPF=lambda df: utl.convert_int_cpf_to_format_cpf(df.CD_CPF),
         CD_CLIENTE=lambda df: utl.convert_column_to_int64(df.id_cliente, -3),
+        CD_ENDERECO=lambda df: utl.convert_column_to_int64(df.id_endereco, -3),
         SK_CLIENTE=lambda df: utl.create_index_dataframe(df, 1)
     ).pipe(
         func=utl.insert_default_values_table
