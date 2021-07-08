@@ -454,12 +454,12 @@ def create_table(conn_output: MockConnection,
 
     str_vars = str_vars[:-2]
 
-    conn_output.execute(f"create table if not exists \"{schema_name.lower()}\".\"{table_name}\" ({str_vars})")
+    conn_output.execute(f" create table if not exists \"{schema_name}\".\"{table_name}\" ({str_vars})")
 
 
 def create_schema(database: MockConnection,
                   schema_name: str) -> None:
-    database.execute(f" create schema if not exists {schema_name.lower()}")
+    database.execute(f" create schema if not exists \"{schema_name}\"")
 
 
 def drop_tables(conn_output: MockConnection,
@@ -467,14 +467,14 @@ def drop_tables(conn_output: MockConnection,
                 dimensions_names: list[str]) -> None:
     for i in range(len(dimensions_names)):
         conn_output.execute(
-            f" drop table if exists \"{schema_name.lower()}\".\"{dimensions_names[i]}\""
+            f" drop table if exists \"{schema_name}\".\"{dimensions_names[i]}\""
         )
 
 
 def drop_schemas(conn_output: MockConnection,
                  schemas_names: list[str]) -> None:
     for schema in schemas_names:
-        conn_output.execute(f" drop schema if exists {schema.lower()}")
+        conn_output.execute(f" drop schema if exists \"{schema}\"")
 
 
 def delete_register_from_table(conn_output: MockConnection,

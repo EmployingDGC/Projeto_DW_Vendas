@@ -4,9 +4,18 @@ import pandas as pd
 
 import connection as conn
 
+import stages as stg
+
 
 def run_stg(connection):
-    pass
+    stg.stg_cliente(connection)
+    stg.stg_endereco(connection)
+    stg.stg_forma_pagamento(connection)
+    stg.stg_funcionario(connection)
+    stg.stg_item_venda(connection)
+    stg.stg_loja(connection)
+    stg.stg_produto(connection)
+    stg.stg_venda(connection)
 
 
 def run_dms(connection):
@@ -37,6 +46,6 @@ if __name__ == "__main__":
         port=5432
     )
 
-    # run(db_connection)
+    run(db_connection)
 
     print(f"\nFinalizado com sucesso em {round(time() - time_initial)} segundos\n")
