@@ -3,6 +3,8 @@ import DW_TOOLS as dwt
 
 import pandas as pd
 
+from datetime import datetime
+
 
 # def get(conn_input):
 #     return utl.convert_table_to_dataframe(
@@ -22,19 +24,31 @@ def get(conn_input):
 
 def treat(frame, conn_input):
     try:
-        # df_current = utl.convert_table_to_dataframe(
-        #     conn_input=conn_input,
-        #     schema_name="stage",
-        #     table_name="STG_PRODUTO"
-        # )
-
-        df_current = dwt.read_table(
+        stg_produto = dwt.read_table(
             conn=conn_input,
             schema="stage",
             table_name="STG_PRODUTO"
         )
     except:
-        return frame
+        return frame.assign(
+            data_cadastro=lambda df: df.data_cadastro.apply(
+                lambda value: (
+                    str(value)
+                    if len(str(value)) == 10
+                    else
+                    "01/01/1900"
+                )
+            )
+        )
+
+    rename_x = {
+        "nome_produto_x": "nome_produto",
+        "cod_barra_x": "cod_barra",
+        "preco_custo_x": "preco_custo",
+        "percentual_lucro_x": "percentual_lucro",
+        "data_cadastro_x": "data_cadastro",
+        "ativo_x": "ativo"
+    }
 
     filter_x = [
         "id_produto",
@@ -46,6 +60,15 @@ def treat(frame, conn_input):
         "ativo_x"
     ]
 
+    rename_y = {
+        "nome_produto_y": "nome_produto",
+        "cod_barra_y": "cod_barra",
+        "preco_custo_y": "preco_custo",
+        "percentual_lucro_y": "percentual_lucro",
+        "data_cadastro_y": "data_cadastro",
+        "ativo_y": "ativo"
+    }
+
     filter_y = [
         "id_produto",
         "nome_produto_y",
@@ -56,85 +79,77 @@ def treat(frame, conn_input):
         "ativo_y"
     ]
 
-    rename_x = {
-        "nome_produto_x": "nome_produto",
-        "cod_barra_x": "cod_barra",
-        "preco_custo_x": "preco_custo",
-        "percentual_lucro_x": "percentual_lucro",
-        "data_cadastro_x": "data_cadastro",
-        "ativo_x": "ativo"
-    }
-
-    rename_y = {
-        "nome_produto_y": "nome_produto",
-        "cod_barra_y": "cod_barra",
-        "preco_custo_y": "preco_custo",
-        "percentual_lucro_y": "percentual_lucro",
-        "data_cadastro_y": "data_cadastro",
-        "ativo_y": "ativo"
-    }
-
-    filter_drop = [
-        "id_produto",
-        "nome_produto",
-        "cod_barra",
-        "preco_custo",
-        "percentual_lucro",
-        "data_cadastro"
-    ]
-
-    modified_frame = df_current.merge(
-        right=frame,
-        how="right",
+    teste = frame.assign(
+        data_cadastro=lambda df: df.data_cadastro.apply(
+            lambda value: (
+                str(value)
+                if len(str(value)) == 10
+                else
+                "01/01/1900"
+            )
+        )
+    ).merge(
+        right=stg_produto.assign(
+            data_cadastro=lambda df: df.data_cadastro.apply(
+                lambda value: (
+                    str(value)
+                    if len(str(value)) == 10
+                    else
+                    "01/01/1900"
+                )
+            )
+        ),
+        how="left",
         on="id_produto"
     ).assign(
-        data_cadastro_x=lambda df: utl.convert_column_to_str(
-            utl.convert_column_to_date(df.data_cadastro_x, "%d%m%Y", "01011900")
+        FL_NEW=lambda df: df.apply(
+            lambda row: (
+                str(row.nome_produto_y)
+                == str(row.cod_barra_y)
+                == str(row.preco_custo_y)
+                == str(row.percentual_lucro_y)
+                == str(row.data_cadastro_y)
+                == str(row.ativo_y)
+                == "nan"
+            ),
+            axis=1
+        )
+    )
+
+    df_updated = teste[~teste.FL_NEW].assign(
+        cod_barra_y=lambda df: utl.convert_column_to_int64(
+            column_data_frame=df.cod_barra_y,
+            default=-3
         ),
-        data_cadastro_y=lambda df: utl.convert_column_to_str(
-            utl.convert_column_to_date(df.data_cadastro_y, "%d%m%Y", "01011900")
+        FL_TRASH=lambda df: df.apply(
+            lambda row: (
+                str(row.nome_produto_y) == str(row.nome_produto_x)
+                and str(row.cod_barra_y) == str(row.cod_barra_x)
+                and str(row.preco_custo_y) == str(row.preco_custo_x)
+                and str(row.percentual_lucro_y) == str(row.percentual_lucro_x)
+            ),
+            axis=1
         )
     ).pipe(
-        lambda df: df[~utl.compare_two_columns(df.data_cadastro_x, df.data_cadastro_y)]
+        lambda df: df[~df.FL_TRASH]
     ).assign(
-        FL_NEW=lambda df: df.data_cadastro_x.apply(
-            lambda value: value == "1900-01-01 00:00:00"
-        )
-    )
-
-    if modified_frame.empty:
-        return modified_frame
-
-    new_produtcs = pd.concat([
-        modified_frame.pipe(
-            lambda df: df[df.FL_NEW]
-        ).filter(filter_y).rename(columns=rename_y),
-        modified_frame.pipe(
-            lambda df: df[~df.FL_NEW]
-        ).pipe(
-            lambda df: df.apply(
-                lambda row: utl.set_ativo(row),
-                axis=1
-            )
-        ).pipe(
-            lambda df: pd.concat([
-                df.filter(filter_x).rename(columns=rename_x),
-                df.filter(filter_y).rename(columns=rename_y)
-            ])
-        )
-    ]).assign(
-        FL_ATIVO=lambda df: df.ativo.apply(
-            lambda value: int(value) == 1
+        ativo_x=lambda df: df.ativo_x.apply(
+            lambda value: 1
         ),
-        data_cadastro=lambda df: utl.convert_column_datetime_to_date(df.data_cadastro).apply(
-            lambda row: f"{str(row).split('-')[2]}/{str(row).split('-')[1]}/{str(row).split('-')[0]}"
-        )
-    ).pipe(
-        lambda df: df.drop_duplicates(filter_drop)
+        ativo_y=lambda df: df.ativo_x.apply(
+            lambda value: 0
+        ),
+        data_cadastro_x=lambda df: datetime.now().strftime('%d/%m/%Y')
     )
 
-    new_produtcs.pipe(
-        lambda df: df[~df.FL_ATIVO]
+    df_final = pd.concat([
+        df_updated.filter(filter_y).rename(columns=rename_y),
+        df_updated.filter(filter_x).rename(columns=rename_x),
+        teste[teste.FL_NEW].filter(filter_x).rename(columns=rename_x)
+    ])
+
+    df_final.drop_duplicates(
+        subset=["id_produto"]
     ).apply(
         lambda row: utl.delete_register_from_table(
             conn_output=conn_input,
@@ -145,11 +160,18 @@ def treat(frame, conn_input):
         axis=1
     )
 
-    return new_produtcs.drop(columns=["FL_ATIVO"])
+    return df_final
 
 
 def run(conn_input):
     utl.create_schema(conn_input, "stage")
+
+    # print(
+    #     get(conn_input).pipe(
+    #         func=treat,
+    #         conn_input=conn_input
+    #     )
+    # )
 
     get(conn_input).pipe(
         func=treat,

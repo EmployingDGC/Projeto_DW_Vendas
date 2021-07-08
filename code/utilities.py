@@ -486,6 +486,16 @@ def delete_register_from_table(conn_output: MockConnection,
     )
 
 
+def update_register_from_table(conn_output: MockConnection,
+                               schema_name: str,
+                               table_name: str,
+                               set_: str,
+                               where: str) -> None:
+    conn_output.execute(
+        f"update \"{schema_name}\".\"{table_name}\" set {set_} where {where}"
+    )
+
+
 def set_ativo(row: pd.Series) -> pd.Series:
     row.ativo_x = 0
     row.ativo_y = 0
