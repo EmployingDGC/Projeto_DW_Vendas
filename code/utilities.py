@@ -529,6 +529,7 @@ def generate_date_table(initial_date: str,
 
     start = dt.datetime.strptime(initial_date, format_date)
     end = dt.datetime.strptime(final_date, format_date)
+
     date_generated = [
         (start + dt.timedelta(days=d)).strftime(format_date) +
         f" {h:02}:00:00" for d in range((end - start).days) for h in range(24)

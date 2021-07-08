@@ -2,55 +2,19 @@ from time import time
 
 import pandas as pd
 
-
-# import utilities as utl
 import connection as conn
 
-import stg_cliente
-import stg_endereco
-import stg_forma_pagamento
-import stg_funcionario
-import stg_item_venda
-import stg_loja
-import stg_produto
-import stg_venda
 
-import d_categoria
-import d_cliente
-import d_data
-import d_endereco
-import d_funcionario
-import d_loja
-import d_produto
-import d_tipo_pagamento
-
-import f_venda_produto
+def run_stg(connection):
+    pass
 
 
-def run_stg(conn_input):
-    stg_cliente.run(conn_input)
-    stg_endereco.run(conn_input)
-    stg_forma_pagamento.run(conn_input)
-    stg_funcionario.run(conn_input)
-    stg_item_venda.run(conn_input)
-    stg_loja.run(conn_input)
-    stg_produto.run(conn_input)
-    stg_venda.run(conn_input)
+def run_dms(connection):
+    pass
 
 
-def run_dms(conn_output):
-    d_categoria.run(conn_output)
-    d_cliente.run(conn_output)
-    d_data.run(conn_output)
-    d_endereco.run(conn_output)
-    d_funcionario.run(conn_output)
-    d_loja.run(conn_output)
-    d_produto.run(conn_output)
-    d_tipo_pagamento.run(conn_output)
-
-
-def run_fact(conn_output):
-    f_venda_produto.run(conn_output)
+def run_fact(connection):
+    pass
 
 
 def run(connection):
@@ -65,14 +29,14 @@ if __name__ == "__main__":
 
     pd.set_option("display.max_columns", None)
 
-    conn_db = conn.create_connection_postgre(
+    db_connection = conn.create_connection_postgre(
         server="10.0.0.105",
-        database="projeto_dw_vendas",
+        database="projeto_dw_vendas_refatorado",
         username="postgres",
         password="itix.123",
         port=5432
     )
 
-    run(conn_db)
+    # run(db_connection)
 
     print(f"\nFinalizado com sucesso em {round(time() - time_initial)} segundos\n")
