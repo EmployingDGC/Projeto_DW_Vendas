@@ -1,6 +1,11 @@
 import utilities as utl
 import DW_TOOLS as dwt
 
+from sqlalchemy.types import (
+    Integer,
+    Float
+)
+
 
 # def get(conn_input):
 #     return utl.convert_table_to_dataframe(
@@ -120,7 +125,7 @@ def treat(frame, connection):
             column_data_frame=df.assign(
                 data_venda=lambda df1: df1.data_venda.apply(
                     lambda value: f"{str(value).split(':', 1)[0]}:00:00"
-                )
+                ).astype("datetime64[ns]")
             ).merge(
                 right=dwt.read_table(
                     conn=connection,
@@ -249,6 +254,23 @@ def treat(frame, connection):
 
 
 def run(conn_input):
+    dtypes = {
+        "SK_PRODUTO": Integer(),
+        "SK_CLIENTE": Integer(),
+        "SK_LOJA": Integer(),
+        "SK_FUNCIONARIO": Integer(),
+        "SK_DATA": Integer(),
+        "SK_CATEGORIA": Integer(),
+        "SK_TIPO_PAGAMENTO": Integer(),
+        "SK_ENDERECO_LOJA": Integer(),
+        "SK_ENDERECO_CLIENTE": Integer(),
+        "CD_NFC": Integer(),
+        "VL_LIQUIDO": Float(),
+        "VL_BRUTO": Float(),
+        "VL_PERCENTUAL_LUCRO": Float(),
+        "QTD_PRODUTO": Integer()
+    }
+
     utl.create_schema(conn_input, "dw")
 
     get(conn_input).pipe(
@@ -260,5 +282,6 @@ def run(conn_input):
         schema="dw",
         if_exists="replace",
         index=False,
-        chunksize=10000
+        chunksize=10000,
+        dtype=dtypes
     )

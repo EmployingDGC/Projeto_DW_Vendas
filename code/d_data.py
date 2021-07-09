@@ -2,6 +2,12 @@ import pandas as pd
 
 import utilities as utl
 
+from sqlalchemy.types import (
+    Integer,
+    String,
+    DateTime
+)
+
 
 def get():
     return utl.generate_date_table(
@@ -40,6 +46,16 @@ def treat(frame):
 
 
 def run(conn_input):
+    dtypes = {
+        "SK_DATA": Integer(),
+        "DT_REFERENCIA": DateTime(),
+        "DT_ANO": Integer(),
+        "DT_MES": Integer(),
+        "DT_DIA": Integer(),
+        "DT_HORA": Integer(),
+        "DS_TURNO": String()
+    }
+
     utl.create_schema(conn_input, "dw")
 
     get().pipe(
@@ -50,5 +66,6 @@ def run(conn_input):
         schema="dw",
         if_exists="replace",
         index=False,
-        chunksize=10000
+        chunksize=10000,
+        dtype=dtypes
     )

@@ -2,6 +2,11 @@ import pandas as pd
 
 import utilities as utl
 
+from sqlalchemy.types import (
+    Integer,
+    String
+)
+
 
 def get():
     all_categories = [
@@ -30,6 +35,11 @@ def get():
 
 
 def run(conn_input):
+    dtypes = {
+        "SK_CATEGORIA": Integer(),
+        "DS_CATEGORIA": String()
+    }
+
     utl.create_schema(conn_input, "dw")
 
     get().to_sql(
@@ -38,5 +48,6 @@ def run(conn_input):
         schema="dw",
         if_exists="replace",
         index=False,
-        chunksize=10000
+        chunksize=10000,
+        dtype=dtypes
     )

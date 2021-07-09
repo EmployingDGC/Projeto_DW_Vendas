@@ -1,6 +1,13 @@
 import utilities as utl
 import DW_TOOLS as dwt
 
+from sqlalchemy.types import (
+    Integer,
+    String,
+    BigInteger,
+    DateTime
+)
+
 
 # def get(conn_input):
 #     return utl.convert_table_to_dataframe(
@@ -71,6 +78,9 @@ def treat(frame):
         SK_LOJA=lambda df: utl.create_index_dataframe(df, 1)
     ).rename(
         columns=columns_rename
+    ).assign(
+        DT_INICIAL=lambda df: df.DT_INICIAL.astype("datetime64[ns]"),
+        DT_FINAL=lambda df: df.DT_FINAL.astype("datetime64[ns]")
     ).pipe(
         func=utl.insert_default_values_table
     ).filter(
@@ -79,6 +89,19 @@ def treat(frame):
 
 
 def run(conn_input):
+    dtypes = {
+        "SK_LOJA": Integer(),
+        "CD_LOJA": Integer(),
+        "CD_ENDERECO": Integer(),
+        "CD_CNPJ": BigInteger(),
+        "DS_CNPJ": String(),
+        "NO_LOJA": String(),
+        "NO_RAZAO_SOCIAL": String(),
+        "DT_INICIAL": DateTime(),
+        "DT_FINAL": DateTime(),
+        "FL_ATIVO": Integer()
+    }
+
     utl.create_schema(conn_input, "dw")
 
     get(conn_input).pipe(
@@ -89,5 +112,6 @@ def run(conn_input):
         schema="dw",
         if_exists="replace",
         index=False,
-        chunksize=10000
+        chunksize=10000,
+        dtype=dtypes
     )

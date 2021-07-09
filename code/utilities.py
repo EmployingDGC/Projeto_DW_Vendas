@@ -529,6 +529,7 @@ def generate_date_table(initial_date: str,
 
     start = dt.datetime.strptime(initial_date, format_date)
     end = dt.datetime.strptime(final_date, format_date)
+
     date_generated = [
         (start + dt.timedelta(days=d)).strftime(format_date) +
         f" {h:02}:00:00" for d in range((end - start).days) for h in range(24)
@@ -538,7 +539,6 @@ def generate_date_table(initial_date: str,
         "DT_REFERENCIA": date_generated
     }).assign(
         SK_DATA=lambda df: create_index_dataframe(df, 1),
-        # DT_REFERENCIA=lambda df: df.DT_REFERENCIA.astype("datetime64[ns]"),
         DT_ANO=lambda df: df.DT_REFERENCIA.apply(
             lambda value: str(value).split(" ")[0].split("-")[0]
         ).astype("int64"),
@@ -550,5 +550,6 @@ def generate_date_table(initial_date: str,
         ).astype("int64"),
         DT_HORA=lambda df: df.DT_REFERENCIA.apply(
             lambda value: str(value).split(" ")[1].split(":")[0]
-        ).astype("int64")
+        ).astype("int64"),
+        DT_REFERENCIA=lambda df: df.DT_REFERENCIA.astype("datetime64[ns]")
     ).filter(order_columns)

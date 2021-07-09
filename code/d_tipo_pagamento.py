@@ -1,6 +1,11 @@
 import utilities as utl
 import DW_TOOLS as dwt
 
+from sqlalchemy.types import (
+    Integer,
+    String
+)
+
 
 # def get(conn_input):
 #     return utl.convert_table_to_dataframe(
@@ -49,6 +54,13 @@ def treat(frame):
 
 
 def run(conn_input):
+    dtypes = {
+        "SK_TIPO_PAGAMENTO": Integer(),
+        "CD_TIPO_PAGAMENTO": Integer(),
+        "NO_TIPO_PAGAMENTO": String(),
+        "DS_TIPO_PAGAMENTO": String()
+    }
+
     utl.create_schema(conn_input, "dw")
 
     get(conn_input).pipe(
@@ -59,5 +71,6 @@ def run(conn_input):
         schema="dw",
         if_exists="replace",
         index=False,
-        chunksize=10000
+        chunksize=10000,
+        dtype=dtypes
     )
