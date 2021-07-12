@@ -315,56 +315,33 @@ def insert_row(df: pd.DataFrame,
     ).reset_index(drop=True)
 
 
-def insert_default_values_table(df: pd.DataFrame) -> pd.DataFrame:
-    def if_1(key):
-        return f"{df[key].dtype}" == "int64"
-
-    def if_2(key):
-        return f"{df[key].dtype}" == "float64"
-
-    def if_3(key):
-        return f"{df[key].dtype}" == "datetime64[ns]"
-
-    return df.pipe(
-        func=insert_row,
-        row=0,
-        values=[
-            -3
-            if if_1(k) else
-            -3.0
-            if if_2(k) else
-            "1900-01-01 00:00:00"
-            if if_3(k) else
-            "Desconhecido"
+def insert_default_values_table(df: pd.DataFrame,
+                                reset_index: bool = False) -> pd.DataFrame:
+    df_default = pd.DataFrame(
+        data={
+            k: [-3, -2, -1]
+            if str(df[k].dtype) == "int64"
+            else [-3.0, -2.0, -1.0]
+            if str(df[k].dtype) == "float64"
+            else ["1900-01-01 00:00:00.000000" for _ in range(3)]
+            if str(df[k].dtype) == "datetime64[ns]"
+            else ["Desconhecido", "Não Aplicável", "Não Informado"]
             for k in df.keys()
-        ]
-    ).pipe(
-        func=insert_row,
-        row=0,
-        values=[
-            -2
-            if if_1(k) else
-            -2.0
-            if if_2(k) else
-            "1900-01-01 00:00:00"
-            if if_3(k) else
-            "Não Aplicável"
-            for k in df.keys()
-        ]
-    ).pipe(
-        func=insert_row,
-        row=0,
-        values=[
-            -1
-            if if_1(k) else
-            -1.0
-            if if_2(k) else
-            "1900-01-01 00:00:00"
-            if if_3(k) else
-            "Não Informado"
-            for k in df.keys()
-        ]
+        }
     )
+
+    if reset_index:
+        return pd.concat([
+            df_default,
+            df
+        ]).reset_index(
+            drop=True
+        )
+
+    return pd.concat([
+        df_default,
+        df
+    ])
 
 
 def multiply_columns(frame: pd.DataFrame,
