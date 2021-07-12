@@ -330,18 +330,17 @@ def insert_default_values_table(df: pd.DataFrame,
         }
     )
 
-    if reset_index:
-        return pd.concat([
-            df_default,
-            df
-        ]).reset_index(
-            drop=True
-        )
-
-    return pd.concat([
+    df_final = pd.concat([
         df_default,
         df
     ])
+
+    if reset_index:
+        return df_final.reset_index(
+            drop=True
+        )
+
+    return df_final
 
 
 def multiply_columns(frame: pd.DataFrame,
