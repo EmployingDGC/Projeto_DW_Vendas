@@ -60,21 +60,33 @@ def treat(frame, connection):
         "QTD_PRODUTO"
     ]
 
+    d_produto = dwt.read_table(
+        conn=connection,
+        schema="dw",
+        table_name="D_PRODUTO",
+        columns=["SK_PRODUTO", "CD_PRODUTO", "DT_CADASTRO"]
+    )
+
     return frame.assign(
         SK_PRODUTO=lambda df: utl.convert_column_to_int64(
-            column_data_frame=df.merge(
-                right=dwt.read_table(
-                    conn=connection,
-                    schema="dw",
-                    table_name="D_PRODUTO",
-                    columns=["SK_PRODUTO", "CD_PRODUTO", "FL_ATIVO"]
+            column_data_frame=df.apply(
+                lambda row: d_produto.query(
+                    f"CD_PRODUTO == {row.id_produto}"
+                ).assign(
+                    FL_TRASH=lambda df1: df1.apply(
+                        lambda row1: (
+                            f"{str(row.data_venda).split(':', 1)[0]}:00:00" < str(row1.DT_CADASTRO)
+                        ),
+                        axis=1
+                    )
                 ).pipe(
-                    lambda df1: df1[df1["FL_ATIVO"] == 1]
-                ),
-                how="left",
-                left_on="id_produto",
-                right_on="CD_PRODUTO"
-            ).SK_PRODUTO,
+                    lambda df1: df1[~df1.FL_TRASH]
+                ).sort_values(
+                    by=["DT_CADASTRO"],
+                    ascending=False
+                ).iloc[0].SK_PRODUTO,
+                axis=1
+            ),
             default=-3
         ),
         SK_CLIENTE=lambda df: utl.convert_column_to_int64(

@@ -74,6 +74,17 @@ if __name__ == "__main__":
         port=5432
     )
 
-    run(conn_db)
+    # run(conn_db)
+
+    f_venda_produto.run(conn_db)
+
+    # print(
+    #     dwt.read_table(
+    #         conn=conn_db,
+    #         schema="dw",
+    #         table_name="D_PRODUTO",
+    #         where=f"\"CD_PRODUTO\" = 7"
+    #     ).iloc[0].SK_PRODUTO
+    # )
 
     print(f"\nFinalizado com sucesso em {round(time() - time_initial)} segundos\n")
