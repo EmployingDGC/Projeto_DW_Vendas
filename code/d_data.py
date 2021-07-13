@@ -9,7 +9,7 @@ from sqlalchemy.types import (
 )
 
 
-def get():
+def extract_dim_data():
     return utl.generate_date_table(
         initial_date="2016-01-01",
         final_date="2030-01-01"
@@ -58,7 +58,7 @@ def run(conn_input):
 
     utl.create_schema(conn_input, "dw")
 
-    get().pipe(
+    extract_dim_data().pipe(
         func=treat
     ).to_sql(
         name="D_DATA",

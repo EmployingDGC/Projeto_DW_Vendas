@@ -14,7 +14,7 @@ from datetime import datetime
 #     )
 
 
-def get(conn_input):
+def extract_stg_produto(conn_input):
     return dwt.read_table(
         conn=conn_input,
         schema="public",
@@ -173,7 +173,7 @@ def run(conn_input):
     #     )
     # )
 
-    get(conn_input).pipe(
+    extract_stg_produto(conn_input).pipe(
         func=treat,
         conn_input=conn_input
     ).to_sql(

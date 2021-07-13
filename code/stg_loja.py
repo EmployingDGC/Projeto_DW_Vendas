@@ -15,7 +15,7 @@ from datetime import datetime
 #     )
 
 
-def get(conn_input):
+def extract_stg_loja(conn_input):
     return dwt.read_table(
         conn=conn_input,
         schema="public",
@@ -228,7 +228,7 @@ def treat(frame, conn_output):
 def run(conn_input):
     utl.create_schema(conn_input, "stage")
 
-    get(conn_input).pipe(
+    extract_stg_loja(conn_input).pipe(
         func=treat,
         conn_output=conn_input
     ).to_sql(

@@ -8,7 +8,7 @@ from sqlalchemy.types import (
 )
 
 
-def get():
+def extract_dim_categoria():
     all_categories = [
         "Café da Manhã",
         "Mercearia",
@@ -42,7 +42,7 @@ def run(conn_input):
 
     utl.create_schema(conn_input, "dw")
 
-    get().to_sql(
+    extract_dim_categoria().to_sql(
         name="D_CATEGORIA",
         con=conn_input,
         schema="dw",

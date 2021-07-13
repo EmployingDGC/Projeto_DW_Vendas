@@ -21,7 +21,7 @@ from sqlalchemy.types import (
 #     )
 
 
-def get(conn_input):
+def extract_dim_funcionario(conn_input):
     return dwt.read_table(
         conn=conn_input,
         schema="stage",
@@ -76,7 +76,7 @@ def run(conn_input):
 
     utl.create_schema(conn_input, "dw")
 
-    get(conn_input).pipe(
+    extract_dim_funcionario(conn_input).pipe(
         func=treat
     ).to_sql(
         name="D_FUNCIONARIO",
