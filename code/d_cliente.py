@@ -21,9 +21,9 @@ from sqlalchemy.types import (
 #     )
 
 
-def extract_dim_cliente(conn_input):
+def extract_dim_cliente(connection):
     return dwt.read_table(
-        conn=conn_input,
+        conn=connection,
         schema="stage",
         table_name="STG_CLIENTE",
         columns=[
@@ -32,52 +32,68 @@ def extract_dim_cliente(conn_input):
             "nome",
             "id_endereco",
         ]
+    ).merge(
+        right=dwt.read_table(
+            conn=connection,
+            schema="stage",
+            table_name="STG_ENDERECO"
+        ),
+        how="inner",
+        on="id_endereco"
     )
 
 
-def treat(frame):
-    order_columns = [
+def treat_dim_cliente(frame):
+    select_columns = [
         "SK_CLIENTE",
         "CD_CLIENTE",
+        "NO_CLIENTE",
+        "NU_CPF",
         "CD_ENDERECO",
-        "CD_CPF",
-        "DS_CPF",
-        "NO_CLIENTE"
+        "NO_ESTADO",
+        "NO_CIDADE",
+        "NO_BAIRRO",
+        "NO_RUA"
     ]
 
-    return frame.drop_duplicates(
-        subset=["cpf", "nome"]
-    ).assign(
-        NO_CLIENTE=lambda df: utl.convert_column_to_tittle(df.nome),
-        CD_CPF=lambda df: utl.convert_column_cpf_to_int64(df.cpf, -3),
-        DS_CPF=lambda df: utl.convert_int_cpf_to_format_cpf(df.CD_CPF),
+    return frame.assign(
+        NO_CLIENTE=lambda df: df.nome.str.upper(),
+        NU_CPF=lambda df: df.cpf.str.replace("-", ""),
         CD_CLIENTE=lambda df: utl.convert_column_to_int64(df.id_cliente, -3),
         CD_ENDERECO=lambda df: utl.convert_column_to_int64(df.id_endereco, -3),
-        SK_CLIENTE=lambda df: utl.create_index_dataframe(df, 1)
+        SK_CLIENTE=lambda df: utl.create_index_dataframe(df, 1),
+        NO_ESTADO=lambda df: df.estado.str.upper().str.strip(),
+        NO_CIDADE=lambda df: df.cidade.str.upper().str.strip(),
+        NO_BAIRRO=lambda df: df.bairro.str.upper().str.strip(),
+        NO_RUA=lambda df: df.rua.str.upper().str.strip()
     ).pipe(
         func=utl.insert_default_values_table
     ).filter(
-        items=order_columns
+        items=select_columns
     )
 
 
-def load_dim_cliente(conn_input):
+def load_dim_cliente(connection):
     dtypes = {
         "SK_CLIENTE": Integer(),
         "CD_CLIENTE": Integer(),
         "CD_ENDERECO": Integer(),
         "CD_CPF": BigInteger(),
         "DS_CPF": String(),
-        "NO_CLIENTE": String()
+        "NO_CLIENTE": String(),
+        "NO_ESTADO": String(),
+        "NO_CIDADE": String(),
+        "NO_BAIRRO": String(),
+        "NO_RUA": String()
     }
 
-    utl.create_schema(conn_input, "dw")
+    utl.create_schema(connection, "dw")
 
-    extract_dim_cliente(conn_input).pipe(
-        func=treat
+    extract_dim_cliente(connection).pipe(
+        func=treat_dim_cliente
     ).to_sql(
         name="D_CLIENTE",
-        con=conn_input,
+        con=connection,
         schema="dw",
         if_exists="replace",
         index=False,

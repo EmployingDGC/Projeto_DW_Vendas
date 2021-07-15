@@ -4,7 +4,6 @@ import DW_TOOLS as dwt
 from sqlalchemy.types import (
     Integer,
     String,
-    BigInteger,
     DateTime
 )
 
@@ -27,21 +26,19 @@ from sqlalchemy.types import (
 #     )
 
 
-def extract_dim_loja(conn_input):
+def extract_dim_loja(connection):
     return dwt.read_table(
-        conn=conn_input,
+        conn=connection,
         schema="stage",
-        table_name="STG_LOJA",
-        columns=[
-            "id_loja",
-            "id_endereco",
-            "cnpj",
-            "nome_loja",
-            "razao_social",
-            "data_inicial",
-            "data_final",
-            "ativo"
-        ]
+        table_name="STG_LOJA"
+    ).merge(
+        right=dwt.read_table(
+            conn=connection,
+            schema="stage",
+            table_name="STG_ENDERECO"
+        ),
+        how="inner",
+        on="id_endereco"
     )
 
 
@@ -49,33 +46,38 @@ def treat_dim_loja(frame):
     columns_rename = {
         "id_loja": "CD_LOJA",
         "id_endereco": "CD_ENDERECO",
-        "cnpj": "CD_CNPJ",
-        "nome_loja": "NO_LOJA",
-        "razao_social": "NO_RAZAO_SOCIAL",
+        "telefone": "NU_TELEFONE",
         "data_inicial": "DT_INICIAL",
         "data_final": "DT_FINAL",
         "ativo": "FL_ATIVO"
     }
 
-    order_columns = [
+    select_columns = [
         "SK_LOJA",
         "CD_LOJA",
         "CD_ENDERECO",
-        "CD_CNPJ",
-        "DS_CNPJ",
+        "NU_CNPJ",
+        "NU_TELEFONE",
         "NO_LOJA",
         "NO_RAZAO_SOCIAL",
+        "NO_ESTADO",
+        "NO_CIDADE",
+        "NO_BAIRRO",
+        "NO_RUA",
         "DT_INICIAL",
         "DT_FINAL",
         "FL_ATIVO"
     ]
 
     return frame.assign(
-        cnpj=lambda df: utl.convert_column_cnpj_to_int64(df.cnpj, -3),
-        nome_loja=lambda df: utl.convert_column_to_tittle(df.nome_loja),
-        razao_social=lambda df: utl.convert_column_to_tittle(df.razao_social),
-        DS_CNPJ=lambda df: utl.convert_int_cnpj_to_format_cnpj(df.cnpj),
-        SK_LOJA=lambda df: utl.create_index_dataframe(df, 1)
+        NU_CNPJ=lambda df: df.cnpj.str.replace("-", "").str.strip(),
+        NO_LOJA=lambda df: df.nome_loja.str.upper().str.strip(),
+        NO_RAZAO_SOCIAL=lambda df: df.razao_social.str.upper().str.strip(),
+        SK_LOJA=lambda df: utl.create_index_dataframe(df, 1),
+        NO_ESTADO=lambda df: df.estado.str.upper().str.strip(),
+        NO_CIDADE=lambda df: df.cidade.str.upper().str.strip(),
+        NO_BAIRRO=lambda df: df.bairro.str.upper().str.strip(),
+        NO_RUA=lambda df: df.rua.str.upper().str.strip()
     ).rename(
         columns=columns_rename
     ).assign(
@@ -84,7 +86,7 @@ def treat_dim_loja(frame):
     ).pipe(
         func=utl.insert_default_values_table
     ).filter(
-        items=order_columns
+        items=select_columns
     )
 
 
@@ -93,10 +95,14 @@ def load_dim_loja(conn_input):
         "SK_LOJA": Integer(),
         "CD_LOJA": Integer(),
         "CD_ENDERECO": Integer(),
-        "CD_CNPJ": BigInteger(),
-        "DS_CNPJ": String(),
+        "NU_CNPJ": String(),
+        "NU_TELEFONE": String(),
         "NO_LOJA": String(),
         "NO_RAZAO_SOCIAL": String(),
+        "NO_ESTADO": String(),
+        "NO_CIDADE": String(),
+        "NO_BAIRRO": String(),
+        "NO_RUA": String(),
         "DT_INICIAL": DateTime(),
         "DT_FINAL": DateTime(),
         "FL_ATIVO": Integer()
