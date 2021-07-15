@@ -1,6 +1,6 @@
 import datetime as dt
-
 import pandas as pd
+import unidecode as ud
 
 
 def convert_two_list_in_dict(keys,
@@ -350,44 +350,49 @@ def multiply_columns(frame,
 
 def create_sk_categoria(column):
     categorias = {
-        1: (
-            "CAFÉ", "ACHOCOLATADO", "CEREAIS", "PÃO", "AÇÚCAR",
-            "SUCO", "ADOÇANTE", "BISCOITOS", "GELÉIA", "IORGUTE"
-        ),
-        2: (
-            "ARROZ", "FEIJÃO", "FARINHA DE TRIGO", "AMIDO DE MILHO", "FERMENTO", "MACARRÃO",
-            "MOLHO DE TOMATE", "AZEITE", "ÓLEO", "OVOS", "TEMPEROS", "SAL", "SAZON"
-        ),
-        3: (
-            "BIFE BOVINO", "FRANGO", "PEIXE", "CARNE MOÍDA", "SALSICHA", "LINGUICA"
-        ),
-        4: (
-            "SUCOS", "CERVEJAS", "REFRIGERANTES", "VINHO"
-        ),
-        5: (
-            "SABONETE", "CREME DENTAL", "SHAMPOO", "CONDICIONADOR", "ABSORVENTE", "PAPEL HIGIÊNICO"
-        ),
-        6: (
-            "LEITE", "PRESUNTO", "QUEIJO", "REQUEIJÃO", "MANTEIGA", "CREME DE LEITE"
-        ),
-        7: (
-            "ÁGUA SANITÁRIA", "SABÃO EM PÓ", "PALHA DE AÇO", "AMACIANTE", "DETERGENTE",
+        1: [
+            "CAFE", "ACHOCOLATADO", "CEREAL", "CEREAIS", "PAO",
+            "ACUCAR", "ADOCANTE", "BISCOITO", "GELEIA", "IORGUTE"
+        ],
+        2: [
+            "ARROZ", "FEIJAO", "FARINHA DE TRIGO", "AMIDO DE MILHO", "FERMENTO", "MACARRAO",
+            "MOLHO DE TOMATE", "AZEITE", "OLEO", "OVOS", "TEMPEROS", "SAL", "SAZON",
+            "FARINHA DE AVEIA", "FANDANGOS"
+        ],
+        3: [
+            "BIFE", "FRANGO", "PEIXE", "CARNE MOIDA", "SALSICHA", "LINGUICA"
+        ],
+        4: [
+            "SUCO", "CERVEJA", "REFRIGERANTE", "VINHO"
+        ],
+        5: [
+            "SABONETE", "CREME DENTAL", "SHAMPOO", "CONDICIONADOR", "ABSORVENTE", "PAPEL HIGIENICO",
+            "FRALDA"
+        ],
+        6: [
+            "LEITE", "PRESUNTO", "QUEIJO", "REQUEIJAO", "MANTEIGA", "CREME DE LEITE"
+        ],
+        7: [
+            "AGUA SANITARIA", "SABAO EM PO", "PALHA DE ACO", "AMACIANTE", "DETERGENTE",
             "SACO DE LIXO", "DESINFETANTE", "PAPEL TOALHA"
-        ),
-        8: (
-            "ALFACE", "CEBOLA", "ALHO", "TOMATE", "LIMÃO", "BANANA", "MAÇÃ", "BATATA"
-        )
+        ],
+        8: [
+            "ALFACE", "CEBOLA", "ALHO", "TOMATE", "LIMAO", "BANANA", "MACA", "BATATA"
+        ]
     }
 
     def categorized(name):
+        name_ud = ud.unidecode(name.upper())
+
         for k, v in categorias.items():
-            if name.upper() in v:
+            if name_ud in v:
                 return k
 
-        for n in name.split():
-            for k, v in categorias.items():
-                if n.upper() in v:
-                    return k
+            else:
+                for n in name_ud.split():
+                    for cat in v:
+                        if n in cat:
+                            return k
 
         return -3
 
@@ -489,42 +494,94 @@ def compare_two_columns(column_1,
     return column_1 == column_2
 
 
-def generate_date_table(initial_date,
-                        final_date):
-    format_date = "%Y-%m-%d"
+def generate_date_table(start_date,
+                        end_date,
+                        frequency="D"):
+    """
+    frequency values
+    https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#timeseries-offset-aliases
+
+    :param start_date:
+        Data de início da contagem, de preferência no formato USA "2021-05-01"
+    :param end_date:
+        Data de fim da contagem, de preferência no formato USA "2021-01-01"
+    :param frequency:
+        Frequência em que serão contadas as datas, "D" = dias, "M" = mêses, "H" = horas, "min" = minutos, etc.
+    :return:
+        Retorna um dataframe com as datas geradas no período especificado
+    """
 
     order_columns = [
         "SK_DATA",
         "DT_REFERENCIA",
+        "DT_SEMESTRE",
+        "DT_TRIMESTRE",
+        "DT_BIMESTRE",
         "DT_ANO",
         "DT_MES",
         "DT_DIA",
-        "DT_HORA"
-    ]
-
-    start = dt.datetime.strptime(initial_date, format_date)
-    end = dt.datetime.strptime(final_date, format_date)
-
-    date_generated = [
-        (start + dt.timedelta(days=d)).strftime(format_date) +
-        f" {h:02}:00:00" for d in range((end - start).days) for h in range(24)
+        "DT_HORA",
+        "DT_MINUTO",
+        "DT_SEGUNDO"
     ]
 
     return pd.DataFrame({
-        "DT_REFERENCIA": date_generated
+        "DT_REFERENCIA": pd.date_range(
+            start=start_date,
+            end=end_date,
+            freq=frequency
+        )
     }).assign(
         SK_DATA=lambda df: create_index_dataframe(df, 1),
         DT_ANO=lambda df: df.DT_REFERENCIA.apply(
-            lambda value: str(value).split(" ")[0].split("-")[0]
-        ).astype("int64"),
+            lambda value: value.year
+        ),
         DT_MES=lambda df: df.DT_REFERENCIA.apply(
-            lambda value: str(value).split(" ")[0].split("-")[1]
-        ).astype("int64"),
+            lambda value: value.month
+        ),
         DT_DIA=lambda df: df.DT_REFERENCIA.apply(
-            lambda value: str(value).split(" ")[0].split("-")[2]
-        ).astype("int64"),
+            lambda value: value.day
+        ),
         DT_HORA=lambda df: df.DT_REFERENCIA.apply(
-            lambda value: str(value).split(" ")[1].split(":")[0]
-        ).astype("int64"),
-        DT_REFERENCIA=lambda df: df.DT_REFERENCIA.astype("datetime64[ns]")
+            lambda value: value.hour
+        ),
+        DT_MINUTO=lambda df: df.DT_REFERENCIA.apply(
+            lambda value: value.minute
+        ),
+        DT_SEGUNDO=lambda df: df.DT_REFERENCIA.apply(
+            lambda value: value.second
+        ),
+        DT_SEMESTRE=lambda df: df.DT_MES.apply(
+            func=lambda value: (
+                1
+                if 1 <= value <= 6
+                else 2
+            )
+        ),
+        DT_TRIMESTRE=lambda df: df.DT_MES.apply(
+            func=lambda value: (
+                1
+                if 1 <= value <= 3
+                else 2
+                if 4 <= value <= 6
+                else 3
+                if 7 <= value <= 9
+                else 4
+            )
+        ),
+        DT_BIMESTRE=lambda df: df.DT_MES.apply(
+            func=lambda value: (
+                1
+                if 1 <= value <= 2
+                else 2
+                if 3 <= value <= 4
+                else 3
+                if 5 <= value <= 6
+                else 4
+                if 7 <= value <= 8
+                else 5
+                if 9 <= value <= 10
+                else 6
+            )
+        )
     ).filter(order_columns)

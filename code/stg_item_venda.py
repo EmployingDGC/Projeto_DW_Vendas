@@ -2,14 +2,6 @@ import utilities as utl
 import DW_TOOLS as dwt
 
 
-def get(conn_input):
-    return utl.convert_table_to_dataframe(
-        conn_input=conn_input,
-        schema_name="public",
-        table_name="ITEM_VENDA"
-    )
-
-
 # def run(conn_input):
 #     get(conn_input).to_sql(
 #         name="STG_ITEM_VENDA",
@@ -21,7 +13,7 @@ def get(conn_input):
 #     )
 
 
-def run(conn_input):
+def run_stg_item_venda(conn_input):
     utl.create_schema(conn_input, "stage")
 
     dwt.create_stage(

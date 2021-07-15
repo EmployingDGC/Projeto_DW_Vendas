@@ -38,7 +38,7 @@ def extract_fact_venda_produto(conn_input):
     )
 
 
-def treat(frame, connection):
+def treat_fact_venda_produto(frame, connection):
     columns_rename = {
         "qtd_produto": "QTD_PRODUTO"
     }
@@ -295,7 +295,7 @@ def treat(frame, connection):
     )
 
 
-def run(conn_input):
+def run_fact_venda_produto(conn_input):
     dtypes = {
         "SK_PRODUTO": Integer(),
         "SK_CLIENTE": Integer(),
@@ -316,7 +316,7 @@ def run(conn_input):
     utl.create_schema(conn_input, "dw")
 
     extract_fact_venda_produto(conn_input).pipe(
-        func=treat,
+        func=treat_fact_venda_produto,
         connection=conn_input
     ).to_sql(
         name="F_VENDA_PRODUTO",

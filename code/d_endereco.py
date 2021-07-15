@@ -37,7 +37,7 @@ def extract_dim_endereco(conn_input):
     )
 
 
-def treat(frame):
+def treat_dim_endereco(frame):
     columns_rename = {
         "id_endereco": "CD_ENDERECO",
         "estado": "NO_ESTADO",
@@ -73,7 +73,7 @@ def treat(frame):
     )
 
 
-def run(conn_input):
+def run_dim_endereco(conn_input):
     dtypes = {
         "SK_ENDERECO": Integer(),
         "CD_ENDERECO": Integer(),
@@ -86,7 +86,7 @@ def run(conn_input):
     utl.create_schema(conn_input, "dw")
 
     extract_dim_endereco(conn_input).pipe(
-        func=treat
+        func=treat_dim_endereco
     ).to_sql(
         name="D_ENDERECO",
         con=conn_input,

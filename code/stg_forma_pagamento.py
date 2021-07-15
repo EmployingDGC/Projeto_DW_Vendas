@@ -21,7 +21,7 @@ import DW_TOOLS as dwt
 #     )
 
 
-def run(conn_input):
+def run_stg_forma_pagamento(conn_input):
     utl.create_schema(conn_input, "stage")
 
     dwt.create_stage(

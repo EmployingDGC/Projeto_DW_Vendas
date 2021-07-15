@@ -22,7 +22,7 @@ def extract_stg_produto(conn_input):
     )
 
 
-def treat(frame, conn_input):
+def treat_stg_produto(frame, conn_input):
     try:
         stg_produto = dwt.read_table(
             conn=conn_input,
@@ -163,7 +163,7 @@ def treat(frame, conn_input):
     return df_final
 
 
-def run(conn_input):
+def run_stg_produto(conn_input):
     utl.create_schema(conn_input, "stage")
 
     # print(
@@ -174,7 +174,7 @@ def run(conn_input):
     # )
 
     extract_stg_produto(conn_input).pipe(
-        func=treat,
+        func=treat_stg_produto,
         conn_input=conn_input
     ).to_sql(
         name="STG_PRODUTO",

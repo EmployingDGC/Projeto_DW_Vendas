@@ -34,7 +34,7 @@ def extract_dim_funcionario(conn_input):
     )
 
 
-def treat(frame):
+def treat_dim_funcionario(frame):
     columns_rename = {
         "id_funcionario": "CD_FUNCIONARIO",
         "cpf": "CD_CPF",
@@ -65,7 +65,7 @@ def treat(frame):
     )
 
 
-def run(conn_input):
+def run_dim_funcionario(conn_input):
     dtypes = {
         "SK_FUNCIONARIO": Integer(),
         "CD_FUNCIONARIO": Integer(),
@@ -77,7 +77,7 @@ def run(conn_input):
     utl.create_schema(conn_input, "dw")
 
     extract_dim_funcionario(conn_input).pipe(
-        func=treat
+        func=treat_dim_funcionario
     ).to_sql(
         name="D_FUNCIONARIO",
         con=conn_input,

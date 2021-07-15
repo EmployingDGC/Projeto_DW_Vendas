@@ -45,7 +45,7 @@ def extract_dim_loja(conn_input):
     )
 
 
-def treat(frame):
+def treat_dim_loja(frame):
     columns_rename = {
         "id_loja": "CD_LOJA",
         "id_endereco": "CD_ENDERECO",
@@ -88,7 +88,7 @@ def treat(frame):
     )
 
 
-def run(conn_input):
+def run_dim_loja(conn_input):
     dtypes = {
         "SK_LOJA": Integer(),
         "CD_LOJA": Integer(),
@@ -105,7 +105,7 @@ def run(conn_input):
     utl.create_schema(conn_input, "dw")
 
     extract_dim_loja(conn_input).pipe(
-        func=treat
+        func=treat_dim_loja
     ).to_sql(
         name="D_LOJA",
         con=conn_input,

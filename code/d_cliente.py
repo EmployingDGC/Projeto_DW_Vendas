@@ -61,7 +61,7 @@ def treat(frame):
     )
 
 
-def run(conn_input):
+def run_dim_cliente(conn_input):
     dtypes = {
         "SK_CLIENTE": Integer(),
         "CD_CLIENTE": Integer(),

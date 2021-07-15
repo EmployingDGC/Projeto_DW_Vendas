@@ -34,7 +34,7 @@ def extract_dim_categoria():
 #     pass
 
 
-def run(conn_input):
+def run_dim_categoria(conn_input):
     dtypes = {
         "SK_CATEGORIA": Integer(),
         "DS_CATEGORIA": String()

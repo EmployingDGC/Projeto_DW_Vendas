@@ -38,7 +38,7 @@ def extract_dim_produto(conn_input):
     )
 
 
-def treat(frame):
+def treat_dim_produto(frame):
     columns_rename = {
         "id_produto": "CD_PRODUTO",
         "cod_barra": "CD_BARRAS",
@@ -72,7 +72,7 @@ def treat(frame):
     )
 
 
-def run(conn_input):
+def run_dim_produto(conn_input):
     dtypes = {
         "SK_PRODUTO": Integer(),
         "CD_PRODUTO": Integer(),
@@ -85,7 +85,7 @@ def run(conn_input):
     utl.create_schema(conn_input, "dw")
 
     extract_dim_produto(conn_input).pipe(
-        func=treat
+        func=treat_dim_produto
     ).to_sql(
         name="D_PRODUTO",
         con=conn_input,
