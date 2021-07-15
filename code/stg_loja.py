@@ -189,7 +189,7 @@ def treat_stg_loja(frame, conn_output):
     return stores.filter(select_columns).drop_duplicates(subset=columns_drop_duplicates)
 
 
-def run_stg_loja(conn_input):
+def load_stg_loja(conn_input):
     utl.create_schema(conn_input, "stage")
 
     extract_stg_loja(conn_input).pipe(

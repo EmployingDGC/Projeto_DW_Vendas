@@ -88,7 +88,7 @@ def treat_dim_loja(frame):
     )
 
 
-def run_dim_loja(conn_input):
+def load_dim_loja(conn_input):
     dtypes = {
         "SK_LOJA": Integer(),
         "CD_LOJA": Integer(),

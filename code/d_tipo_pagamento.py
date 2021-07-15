@@ -53,7 +53,7 @@ def treat_dim_tipo_pagamento(frame):
     )
 
 
-def run_dim_tipo_pagamento(conn_input):
+def load_dim_tipo_pagamento(conn_input):
     dtypes = {
         "SK_TIPO_PAGAMENTO": Integer(),
         "CD_TIPO_PAGAMENTO": Integer(),

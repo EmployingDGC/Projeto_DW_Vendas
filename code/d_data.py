@@ -45,7 +45,7 @@ def treat(frame):
     )
 
 
-def run_dim_data(conn_input):
+def load_dim_data(conn_input):
     dtypes = {
         "SK_DATA": Integer(),
         "DT_REFERENCIA": DateTime(),

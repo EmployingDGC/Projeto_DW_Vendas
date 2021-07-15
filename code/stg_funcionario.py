@@ -21,7 +21,7 @@ import DW_TOOLS as dwt
 #     )
 
 
-def run_stg_funcionario(conn_input):
+def load_stg_funcionario(conn_input):
     utl.create_schema(conn_input, "stage")
 
     dwt.create_stage(

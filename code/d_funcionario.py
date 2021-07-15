@@ -65,7 +65,7 @@ def treat_dim_funcionario(frame):
     )
 
 
-def run_dim_funcionario(conn_input):
+def load_dim_funcionario(conn_input):
     dtypes = {
         "SK_FUNCIONARIO": Integer(),
         "CD_FUNCIONARIO": Integer(),

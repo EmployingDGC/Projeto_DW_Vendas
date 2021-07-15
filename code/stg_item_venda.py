@@ -13,7 +13,7 @@ import DW_TOOLS as dwt
 #     )
 
 
-def run_stg_item_venda(conn_input):
+def load_stg_item_venda(conn_input):
     utl.create_schema(conn_input, "stage")
 
     dwt.create_stage(

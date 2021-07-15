@@ -295,7 +295,7 @@ def treat_fact_venda_produto(frame, connection):
     )
 
 
-def run_fact_venda_produto(conn_input):
+def load_fact_venda_produto(conn_input):
     dtypes = {
         "SK_PRODUTO": Integer(),
         "SK_CLIENTE": Integer(),

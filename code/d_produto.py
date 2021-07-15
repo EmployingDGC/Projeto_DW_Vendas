@@ -72,7 +72,7 @@ def treat_dim_produto(frame):
     )
 
 
-def run_dim_produto(conn_input):
+def load_dim_produto(conn_input):
     dtypes = {
         "SK_PRODUTO": Integer(),
         "CD_PRODUTO": Integer(),

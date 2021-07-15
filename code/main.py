@@ -29,29 +29,29 @@ import f_venda_produto
 
 
 def run_stg(conn_input):
-    stg_cliente.run_stg_cliente(conn_input)
-    stg_endereco.run_stg_endereco(conn_input)
-    stg_forma_pagamento.run_stg_forma_pagamento(conn_input)
-    stg_funcionario.run_stg_funcionario(conn_input)
-    stg_item_venda.run_stg_item_venda(conn_input)
-    stg_loja.run_stg_loja(conn_input)
-    stg_produto.run_stg_produto(conn_input)
-    stg_venda.run_stg_venda(conn_input)
+    stg_cliente.load_stg_cliente(conn_input)
+    stg_endereco.load_stg_endereco(conn_input)
+    stg_forma_pagamento.load_stg_forma_pagamento(conn_input)
+    stg_funcionario.load_stg_funcionario(conn_input)
+    stg_item_venda.load_stg_item_venda(conn_input)
+    stg_loja.load_stg_loja(conn_input)
+    stg_produto.load_stg_produto(conn_input)
+    stg_venda.load_stg_venda(conn_input)
 
 
 def run_dms(conn_output):
-    d_categoria.run_dim_categoria(conn_output)
-    d_cliente.run_dim_cliente(conn_output)
-    d_data.run_dim_data(conn_output)
-    d_endereco.run_dim_endereco(conn_output)
-    d_funcionario.run_dim_funcionario(conn_output)
-    d_loja.run_dim_loja(conn_output)
-    d_produto.run_dim_produto(conn_output)
-    d_tipo_pagamento.run_dim_tipo_pagamento(conn_output)
+    d_categoria.load_dim_categoria(conn_output)
+    d_cliente.load_dim_cliente(conn_output)
+    d_data.load_dim_data(conn_output)
+    d_endereco.load_dim_endereco(conn_output)
+    d_funcionario.load_dim_funcionario(conn_output)
+    d_loja.load_dim_loja(conn_output)
+    d_produto.load_dim_produto(conn_output)
+    d_tipo_pagamento.load_dim_tipo_pagamento(conn_output)
 
 
 def run_fact(conn_output):
-    f_venda_produto.run_fact_venda_produto(conn_output)
+    f_venda_produto.load_fact_venda_produto(conn_output)
 
 
 def run(connection):
@@ -76,7 +76,7 @@ if __name__ == "__main__":
 
     # run(conn_db)
 
-    f_venda_produto.run_fact_venda_produto(conn_db)
+    f_venda_produto.load_fact_venda_produto(conn_db)
 
     # print(
     #     dwt.read_table(

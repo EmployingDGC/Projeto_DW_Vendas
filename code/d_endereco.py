@@ -73,7 +73,7 @@ def treat_dim_endereco(frame):
     )
 
 
-def run_dim_endereco(conn_input):
+def load_dim_endereco(conn_input):
     dtypes = {
         "SK_ENDERECO": Integer(),
         "CD_ENDERECO": Integer(),

@@ -163,7 +163,7 @@ def treat_stg_produto(frame, conn_input):
     return df_final
 
 
-def run_stg_produto(conn_input):
+def load_stg_produto(conn_input):
     utl.create_schema(conn_input, "stage")
 
     # print(
