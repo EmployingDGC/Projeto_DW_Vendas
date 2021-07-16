@@ -22,14 +22,14 @@ from sqlalchemy.types import (
 #     )
 
 
-def extract_fact_venda_produto(conn_input):
+def extract_fact_venda_produto(connection):
     return dwt.read_table(
-        conn=conn_input,
+        conn=connection,
         schema="stage",
         table_name="STG_VENDA"
     ).merge(
         right=dwt.read_table(
-            conn=conn_input,
+            conn=connection,
             schema="stage",
             table_name="STG_ITEM_VENDA"
         ),
@@ -43,7 +43,7 @@ def treat_fact_venda_produto(frame, connection):
         "qtd_produto": "QTD_PRODUTO"
     }
 
-    order_columns = [
+    select_columns = [
         "SK_PRODUTO",
         "SK_CLIENTE",
         "SK_LOJA",
@@ -68,6 +68,7 @@ def treat_fact_venda_produto(frame, connection):
     )
 
     return frame.assign(
+        data_venda=lambda df: df.data_venda.astype("datetime64[ns]"),
         SK_PRODUTO=lambda df: (
             utl.convert_column_to_int64(
                 column_data_frame=df.apply(
@@ -75,11 +76,8 @@ def treat_fact_venda_produto(frame, connection):
                         d_produto.query(
                             f"CD_PRODUTO == {row.id_produto}"
                         ).assign(
-                            FL_TRASH=lambda df1: df1.apply(
-                                lambda row1: (
-                                    f"{str(row.data_venda).split(':', 1)[0]}:00:00" < str(row1.DT_CADASTRO)
-                                ),
-                                axis=1
+                            FL_TRASH=lambda df1: df1.DT_CADASTRO.apply(
+                                lambda value: row.data_venda < value
                             )
                         ).pipe(
                             lambda df1: df1[~df1.FL_TRASH]
@@ -195,54 +193,6 @@ def treat_fact_venda_produto(frame, connection):
                 default=-3
             )
         ),
-        SK_ENDERECO_LOJA=lambda df: (
-            utl.convert_column_to_int64(
-                column_data_frame=df.merge(
-                    right=dwt.read_table(
-                        conn=connection,
-                        schema="dw",
-                        table_name="D_LOJA",
-                        columns=["SK_LOJA", "CD_ENDERECO"]
-                    ),
-                    how="left",
-                    on="SK_LOJA"
-                ).merge(
-                    right=dwt.read_table(
-                        conn=connection,
-                        schema="dw",
-                        table_name="D_ENDERECO",
-                        columns=["SK_ENDERECO", "CD_ENDERECO"]
-                    ),
-                    how="left",
-                    on="CD_ENDERECO"
-                ).SK_ENDERECO,
-                default=-3
-            )
-        ),
-        SK_ENDERECO_CLIENTE=lambda df: (
-            utl.convert_column_to_int64(
-                column_data_frame=df.merge(
-                    right=dwt.read_table(
-                        conn=connection,
-                        schema="dw",
-                        table_name="D_CLIENTE",
-                        columns=["SK_CLIENTE", "CD_ENDERECO"]
-                    ),
-                    how="left",
-                    on="SK_CLIENTE"
-                ).merge(
-                    right=dwt.read_table(
-                        conn=connection,
-                        schema="dw",
-                        table_name="D_ENDERECO",
-                        columns=["SK_ENDERECO", "CD_ENDERECO"]
-                    ),
-                    how="left",
-                    on="CD_ENDERECO"
-                ).SK_ENDERECO,
-                default=-3
-            )
-        ),
         CD_NFC=lambda df: (
             utl.convert_column_to_int64(
                 column_data_frame=df.nfc,
@@ -291,7 +241,7 @@ def treat_fact_venda_produto(frame, connection):
     ).pipe(
         func=utl.insert_default_values_table
     ).filter(
-        items=order_columns
+        items=select_columns
     )
 
 
