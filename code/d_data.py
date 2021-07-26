@@ -11,8 +11,8 @@ from sqlalchemy.types import (
 
 def extract_dim_data():
     return utl.generate_date_table(
-        initial_date="2016-01-01",
-        final_date="2030-01-01"
+        start_date="2016-01-01",
+        end_date="2030-01-01"
     )
 
 
