@@ -45,7 +45,7 @@ def treat(frame):
     )
 
 
-def load_dim_data(conn_input):
+def load_dim_data(connection):
     dtypes = {
         "SK_DATA": Integer(),
         "DT_REFERENCIA": DateTime(),
@@ -56,13 +56,13 @@ def load_dim_data(conn_input):
         "DS_TURNO": String()
     }
 
-    utl.create_schema(conn_input, "dw")
+    utl.create_schema(connection, "dw")
 
     extract_dim_data().pipe(
         func=treat
     ).to_sql(
         name="D_DATA",
-        con=conn_input,
+        con=connection,
         schema="dw",
         if_exists="replace",
         index=False,

@@ -189,15 +189,15 @@ def treat_stg_loja(frame, conn_output):
     return stores.filter(select_columns).drop_duplicates(subset=columns_drop_duplicates)
 
 
-def load_stg_loja(conn_input):
-    utl.create_schema(conn_input, "stage")
+def load_stg_loja(connection):
+    utl.create_schema(connection, "stage")
 
-    extract_stg_loja(conn_input).pipe(
+    extract_stg_loja(connection).pipe(
         func=treat_stg_loja,
-        conn_output=conn_input
+        conn_output=connection
     ).to_sql(
         name="STG_LOJA",
-        con=conn_input,
+        con=connection,
         schema="stage",
         if_exists="append",
         index=False,

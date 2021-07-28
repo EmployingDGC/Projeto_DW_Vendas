@@ -53,7 +53,7 @@ def treat_dim_tipo_pagamento(frame):
     )
 
 
-def load_dim_tipo_pagamento(conn_input):
+def load_dim_tipo_pagamento(connection):
     dtypes = {
         "SK_TIPO_PAGAMENTO": Integer(),
         "CD_TIPO_PAGAMENTO": Integer(),
@@ -61,13 +61,13 @@ def load_dim_tipo_pagamento(conn_input):
         "DS_TIPO_PAGAMENTO": String()
     }
 
-    utl.create_schema(conn_input, "dw")
+    utl.create_schema(connection, "dw")
 
-    extract_dim_tipo_pagamento(conn_input).pipe(
+    extract_dim_tipo_pagamento(connection).pipe(
         func=treat_dim_tipo_pagamento
     ).to_sql(
         name="D_TIPO_PAGAMENTO",
-        con=conn_input,
+        con=connection,
         schema="dw",
         if_exists="replace",
         index=False,

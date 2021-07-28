@@ -163,8 +163,8 @@ def treat_stg_produto(frame, conn_input):
     return df_final
 
 
-def load_stg_produto(conn_input):
-    utl.create_schema(conn_input, "stage")
+def load_stg_produto(connection):
+    utl.create_schema(connection, "stage")
 
     # print(
     #     get(conn_input).pipe(
@@ -173,12 +173,12 @@ def load_stg_produto(conn_input):
     #     )
     # )
 
-    extract_stg_produto(conn_input).pipe(
+    extract_stg_produto(connection).pipe(
         func=treat_stg_produto,
-        conn_input=conn_input
+        conn_input=connection
     ).to_sql(
         name="STG_PRODUTO",
-        con=conn_input,
+        con=connection,
         schema="stage",
         if_exists="append",
         index=False,

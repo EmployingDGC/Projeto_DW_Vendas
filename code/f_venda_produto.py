@@ -245,7 +245,7 @@ def treat_fact_venda_produto(frame, connection):
     )
 
 
-def load_fact_venda_produto(conn_input):
+def load_fact_venda_produto(connection):
     dtypes = {
         "SK_PRODUTO": Integer(),
         "SK_CLIENTE": Integer(),
@@ -263,14 +263,14 @@ def load_fact_venda_produto(conn_input):
         "QTD_PRODUTO": Integer()
     }
 
-    utl.create_schema(conn_input, "dw")
+    utl.create_schema(connection, "dw")
 
-    extract_fact_venda_produto(conn_input).pipe(
+    extract_fact_venda_produto(connection).pipe(
         func=treat_fact_venda_produto,
-        connection=conn_input
+        connection=connection
     ).to_sql(
         name="F_VENDA_PRODUTO",
-        con=conn_input,
+        con=connection,
         schema="dw",
         if_exists="replace",
         index=False,

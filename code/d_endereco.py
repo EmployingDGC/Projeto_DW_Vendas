@@ -73,7 +73,7 @@ def treat_dim_endereco(frame):
     )
 
 
-def load_dim_endereco(conn_input):
+def load_dim_endereco(connection):
     dtypes = {
         "SK_ENDERECO": Integer(),
         "CD_ENDERECO": Integer(),
@@ -83,13 +83,13 @@ def load_dim_endereco(conn_input):
         "NO_RUA": String()
     }
 
-    utl.create_schema(conn_input, "dw")
+    utl.create_schema(connection, "dw")
 
-    extract_dim_endereco(conn_input).pipe(
+    extract_dim_endereco(connection).pipe(
         func=treat_dim_endereco
     ).to_sql(
         name="D_ENDERECO",
-        con=conn_input,
+        con=connection,
         schema="dw",
         if_exists="replace",
         index=False,

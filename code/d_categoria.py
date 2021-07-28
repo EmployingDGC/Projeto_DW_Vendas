@@ -34,17 +34,17 @@ def extract_dim_categoria():
 #     pass
 
 
-def load_dim_categoria(conn_input):
+def load_dim_categoria(connection):
     dtypes = {
         "SK_CATEGORIA": Integer(),
         "DS_CATEGORIA": String()
     }
 
-    utl.create_schema(conn_input, "dw")
+    utl.create_schema(connection, "dw")
 
     extract_dim_categoria().to_sql(
         name="D_CATEGORIA",
-        con=conn_input,
+        con=connection,
         schema="dw",
         if_exists="replace",
         index=False,

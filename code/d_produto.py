@@ -72,7 +72,7 @@ def treat_dim_produto(frame):
     )
 
 
-def load_dim_produto(conn_input):
+def load_dim_produto(connection):
     dtypes = {
         "SK_PRODUTO": Integer(),
         "CD_PRODUTO": Integer(),
@@ -82,13 +82,13 @@ def load_dim_produto(conn_input):
         "FL_ATIVO": Integer()
     }
 
-    utl.create_schema(conn_input, "dw")
+    utl.create_schema(connection, "dw")
 
-    extract_dim_produto(conn_input).pipe(
+    extract_dim_produto(connection).pipe(
         func=treat_dim_produto
     ).to_sql(
         name="D_PRODUTO",
-        con=conn_input,
+        con=connection,
         schema="dw",
         if_exists="replace",
         index=False,

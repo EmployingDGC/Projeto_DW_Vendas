@@ -21,12 +21,12 @@ import DW_TOOLS as dwt
 #     )
 
 
-def load_stg_funcionario(conn_input):
-    utl.create_schema(conn_input, "stage")
+def load_stg_funcionario(connection):
+    utl.create_schema(connection, "stage")
 
     dwt.create_stage(
-        conn_input=conn_input,
-        conn_output=conn_input,
+        conn_input=connection,
+        conn_output=connection,
         schema_in="public",
         table="FUNCIONARIO",
         stg_name="STG_FUNCIONARIO",

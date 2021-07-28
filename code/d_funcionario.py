@@ -65,7 +65,7 @@ def treat_dim_funcionario(frame):
     )
 
 
-def load_dim_funcionario(conn_input):
+def load_dim_funcionario(connection):
     dtypes = {
         "SK_FUNCIONARIO": Integer(),
         "CD_FUNCIONARIO": Integer(),
@@ -74,13 +74,13 @@ def load_dim_funcionario(conn_input):
         "NO_FUNCIONARIO": String()
     }
 
-    utl.create_schema(conn_input, "dw")
+    utl.create_schema(connection, "dw")
 
-    extract_dim_funcionario(conn_input).pipe(
+    extract_dim_funcionario(connection).pipe(
         func=treat_dim_funcionario
     ).to_sql(
         name="D_FUNCIONARIO",
-        con=conn_input,
+        con=connection,
         schema="dw",
         if_exists="replace",
         index=False,

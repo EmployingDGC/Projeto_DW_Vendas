@@ -90,7 +90,7 @@ def treat_dim_loja(frame):
     )
 
 
-def load_dim_loja(conn_input):
+def load_dim_loja(connection):
     dtypes = {
         "SK_LOJA": Integer(),
         "CD_LOJA": Integer(),
@@ -108,13 +108,13 @@ def load_dim_loja(conn_input):
         "FL_ATIVO": Integer()
     }
 
-    utl.create_schema(conn_input, "dw")
+    utl.create_schema(connection, "dw")
 
-    extract_dim_loja(conn_input).pipe(
+    extract_dim_loja(connection).pipe(
         func=treat_dim_loja
     ).to_sql(
         name="D_LOJA",
-        con=conn_input,
+        con=connection,
         schema="dw",
         if_exists="replace",
         index=False,
