@@ -9,6 +9,11 @@ from sqlalchemy.types import (
 
 
 def extract_dim_categoria():
+    """
+    extrai os dados necessários para criar a dimensão categoria
+    :return: dataframe com as categorias
+    """
+
     all_categories = [
         "Café da Manhã",
         "Mercearia",
@@ -30,11 +35,12 @@ def extract_dim_categoria():
     )
 
 
-# def treat() -> pd.DataFrame:
-#     pass
-
-
 def load_dim_categoria(connection):
+    """
+    Carrega a dimensão categoria
+    :param connection: conexão com o banco de dados de saída
+    :return: None
+    """
     dtypes = {
         "SK_CATEGORIA": Integer(),
         "DS_CATEGORIA": String()

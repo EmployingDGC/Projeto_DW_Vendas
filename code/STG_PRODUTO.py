@@ -6,15 +6,13 @@ import pandas as pd
 from datetime import datetime
 
 
-# def get(conn_input):
-#     return utl.convert_table_to_dataframe(
-#         conn_input=conn_input,
-#         schema_name="public",
-#         table_name="PRODUTO"
-#     )
-
-
 def extract_stg_produto(conn_input):
+    """
+    Extrai os dados para fazer a slow change stage produto
+    :param connection: conexão com o banco de dados do cliente
+    :return: dataframe com os dados extraidos para fazer a stage produto
+    """
+
     return dwt.read_table(
         conn=conn_input,
         schema="public",
@@ -23,6 +21,13 @@ def extract_stg_produto(conn_input):
 
 
 def treat_stg_produto(frame, conn_input):
+    """
+    Trata os dados para fazer a slow change stage produto
+    :param frame: dataframe com os dados extraidos
+    :param conn_output: conexão com o banco de daos das stages
+    :return: dataframe com os dados tratados
+    """
+
     try:
         stg_produto = dwt.read_table(
             conn=conn_input,
@@ -164,14 +169,13 @@ def treat_stg_produto(frame, conn_input):
 
 
 def load_stg_produto(connection):
-    utl.create_schema(connection, "stage")
+    """
+    Carrega a slow change stage produto
+    :param connection: conexão com o banco de dados do cliente
+    :return: None
+    """
 
-    # print(
-    #     get(conn_input).pipe(
-    #         func=treat,
-    #         conn_input=conn_input
-    #     )
-    # )
+    utl.create_schema(connection, "stage")
 
     extract_stg_produto(connection).pipe(
         func=treat_stg_produto,

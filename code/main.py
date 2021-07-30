@@ -9,51 +9,44 @@ import pandas as pd
 
 import connection as conn
 
-import stg_cliente
-import stg_endereco
-import stg_forma_pagamento
-import stg_funcionario
-import stg_item_venda
-import stg_loja
-import stg_produto
-import stg_venda
+import stages as stg
 
-import d_categoria
-import d_cliente
-import d_data
-import d_endereco
-import d_funcionario
-import d_loja
-import d_produto
-import d_tipo_pagamento
+import STG_LOJA
+import STG_PRODUTO
 
-import f_venda_produto
+import D_CATEGORIA
+import D_CLIENTE
+import D_DATA
+import D_FUNCIONARIO
+import D_LOJA
+import D_PRODUTO
+import D_TIPO_PAGAMENTO
+
+import F_VENDA_PRODUTO
 
 
 def run_stg(connection):
-    stg_cliente.load_stg_cliente(connection)
-    stg_endereco.load_stg_endereco(connection)
-    stg_forma_pagamento.load_stg_forma_pagamento(connection)
-    stg_funcionario.load_stg_funcionario(connection)
-    stg_item_venda.load_stg_item_venda(connection)
-    stg_loja.load_stg_loja(connection)
-    stg_produto.load_stg_produto(connection)
-    stg_venda.load_stg_venda(connection)
+    stg.load_stg_cliente(connection)
+    stg.load_stg_forma_pagamento(connection)
+    stg.load_stg_funcionario(connection)
+    stg.load_stg_item_venda(connection)
+    STG_LOJA.load_stg_loja(connection)
+    STG_PRODUTO.load_stg_produto(connection)
+    stg.load_stg_venda(connection)
 
 
 def run_dms(connection):
-    d_categoria.load_dim_categoria(connection)
-    d_cliente.load_dim_cliente(connection)
-    d_data.load_dim_data(connection)
-    d_endereco.load_dim_endereco(connection)
-    d_funcionario.load_dim_funcionario(connection)
-    d_loja.load_dim_loja(connection)
-    d_produto.load_dim_produto(connection)
-    d_tipo_pagamento.load_dim_tipo_pagamento(connection)
+    D_CATEGORIA.load_dim_categoria(connection)
+    D_CLIENTE.load_dim_cliente(connection)
+    D_DATA.load_dim_data(connection)
+    D_FUNCIONARIO.load_dim_funcionario(connection)
+    D_LOJA.load_dim_loja(connection)
+    D_PRODUTO.load_dim_produto(connection)
+    D_TIPO_PAGAMENTO.load_dim_tipo_pagamento(connection)
 
 
 def run_fact(connection):
-    f_venda_produto.load_fact_venda_produto(connection)
+    F_VENDA_PRODUTO.load_fact_venda_produto(connection)
 
 
 def run(connection):
@@ -84,109 +77,96 @@ if __name__ == "__main__":
     ) as dag:
         vertex_stg_cliente = PythonOperator(
             task_id="vertex_stg_cliente",
-            python_callable=stg_cliente.load_stg_cliente,
-            op_kwargs={"connection": conn_db}
-        )
-
-        vertex_stg_endereco = PythonOperator(
-            task_id="vertex_stg_endereco",
-            python_callable=stg_endereco.load_stg_endereco,
+            python_callable=stg.load_stg_cliente,
             op_kwargs={"connection": conn_db}
         )
 
         vertex_stg_forma_pagamento = PythonOperator(
             task_id="vertex_stg_forma_pagamento",
-            python_callable=stg_forma_pagamento.load_stg_forma_pagamento,
+            python_callable=stg.load_stg_forma_pagamento,
             op_kwargs={"connection": conn_db}
         )
 
         vertex_stg_funcionario = PythonOperator(
             task_id="vertex_stg_funcionario",
-            python_callable=stg_funcionario.load_stg_funcionario,
+            python_callable=stg.load_stg_funcionario,
             op_kwargs={"connection": conn_db}
         )
 
         vertex_stg_item_venda = PythonOperator(
             task_id="vertex_stg_item_venda",
-            python_callable=stg_item_venda.load_stg_item_venda,
+            python_callable=stg.load_stg_item_venda,
             op_kwargs={"connection": conn_db}
         )
 
         vertex_stg_loja = PythonOperator(
             task_id="vertex_stg_loja",
-            python_callable=stg_loja.load_stg_loja,
+            python_callable=STG_LOJA.load_stg_loja,
             op_kwargs={"connection": conn_db}
         )
 
         vertex_stg_produto = PythonOperator(
             task_id="vertex_stg_produto",
-            python_callable=stg_produto.load_stg_produto,
+            python_callable=STG_PRODUTO.load_stg_produto,
             op_kwargs={"connection": conn_db}
         )
 
         vertex_stg_venda = PythonOperator(
             task_id="vertex_stg_venda",
-            python_callable=stg_venda.load_stg_venda,
+            python_callable=stg.load_stg_venda,
             op_kwargs={"connection": conn_db}
         )
 
         vertex_d_categoria = PythonOperator(
             task_id="vertex_d_categoria",
-            python_callable=d_categoria.load_dim_categoria,
+            python_callable=D_CATEGORIA.load_dim_categoria,
             op_kwargs={"connection": conn_db}
         )
 
         vertex_d_cliente = PythonOperator(
             task_id="vertex_d_cliente",
-            python_callable=d_cliente.load_dim_cliente,
+            python_callable=D_CLIENTE.load_dim_cliente,
             op_kwargs={"connection": conn_db}
         )
 
         vertex_d_data = PythonOperator(
             task_id="vertex_d_data",
-            python_callable=d_data.load_dim_data,
-            op_kwargs={"connection": conn_db}
-        )
-
-        vertex_d_endereco = PythonOperator(
-            task_id="vertex_d_endereco",
-            python_callable=d_endereco.load_dim_endereco,
+            python_callable=D_DATA.load_dim_data,
             op_kwargs={"connection": conn_db}
         )
 
         vertex_d_funcionario = PythonOperator(
             task_id="vertex_d_funcionario",
-            python_callable=d_funcionario.load_dim_funcionario,
+            python_callable=D_FUNCIONARIO.load_dim_funcionario,
             op_kwargs={"connection": conn_db}
         )
 
         vertex_d_loja = PythonOperator(
             task_id="vertex_d_loja",
-            python_callable=d_loja.load_dim_loja,
+            python_callable=D_LOJA.load_dim_loja,
             op_kwargs={"connection": conn_db}
         )
 
         vertex_d_produto = PythonOperator(
             task_id="vertex_d_produto",
-            python_callable=d_produto.load_dim_produto,
+            python_callable=D_PRODUTO.load_dim_produto,
             op_kwargs={"connection": conn_db}
         )
 
         vertex_d_tipo_pagamento = PythonOperator(
             task_id="vertex_d_tipo_pagamento",
-            python_callable=d_tipo_pagamento.load_dim_tipo_pagamento,
+            python_callable=D_TIPO_PAGAMENTO.load_dim_tipo_pagamento,
             op_kwargs={"connection": conn_db}
         )
 
         vertex_f_venda_produto = PythonOperator(
             task_id="vertex_f_venda_produto",
-            python_callable=f_venda_produto.load_fact_venda_produto,
+            python_callable=F_VENDA_PRODUTO.load_fact_venda_produto,
             op_kwargs={"connection": conn_db}
         )
 
         [
             vertex_stg_cliente,
-            vertex_stg_endereco,
             vertex_stg_forma_pagamento,
             vertex_stg_funcionario,
             vertex_stg_item_venda,
@@ -197,7 +177,6 @@ if __name__ == "__main__":
             vertex_d_categoria,
             vertex_d_cliente,
             vertex_d_data,
-            vertex_d_endereco,
             vertex_d_funcionario,
             vertex_d_loja,
             vertex_d_produto,

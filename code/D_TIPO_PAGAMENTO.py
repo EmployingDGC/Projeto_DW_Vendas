@@ -7,22 +7,15 @@ from sqlalchemy.types import (
 )
 
 
-# def get(conn_input):
-#     return utl.convert_table_to_dataframe(
-#         conn_input=conn_input,
-#         schema_name="stage",
-#         table_name="STG_FORMA_PAGAMENTO",
-#         columns=[
-#             "id_pagamento",
-#             "nome",
-#             "descricao"
-#         ]
-#     )
+def extract_dim_tipo_pagamento(connection):
+    """
+    Extrai os dados para fazer a dimensão tipo de pagamento
+    :param connection: conexão com o banco de dados das stages
+    :return: dataframe com os dados extraidos da stage forma_pagamento
+    """
 
-
-def extract_dim_tipo_pagamento(conn_input):
     return dwt.read_table(
-        conn=conn_input,
+        conn=connection,
         schema="stage",
         table_name="STG_FORMA_PAGAMENTO",
         columns=[
@@ -34,6 +27,12 @@ def extract_dim_tipo_pagamento(conn_input):
 
 
 def treat_dim_tipo_pagamento(frame):
+    """
+    Trata os dados para fazer a dimensão tipo_pagamento
+    :param frame: dataframe com os dados extraidos
+    :return: dataframe com os dados tratados para fazer a dimensão tipo pagamento
+    """
+
     order_columns = [
         "SK_TIPO_PAGAMENTO",
         "CD_TIPO_PAGAMENTO",
@@ -54,6 +53,12 @@ def treat_dim_tipo_pagamento(frame):
 
 
 def load_dim_tipo_pagamento(connection):
+    """
+    Carrega os dados da dimensão tipo_pagamento no banco de daods
+    :param connection: conexão com o banco de dados de saída
+    :return: None
+    """
+
     dtypes = {
         "SK_TIPO_PAGAMENTO": Integer(),
         "CD_TIPO_PAGAMENTO": Integer(),

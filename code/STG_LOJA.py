@@ -6,30 +6,29 @@ import DW_TOOLS as dwt
 from datetime import datetime
 
 
-# def get(conn_input):
-#     return utl.convert_table_to_dataframe(
-#         conn_input=conn_input,
-#         schema_name="public",
-#         table_name="LOJA"
-#     )
+def extract_stg_loja(connection):
+    """
+    Extrai os dados para fazer a slow change stage loja
+    :param connection: conexão com o banco de dados do cliente
+    :return: dataframe com os dados extraidos para fazer a stage loja
+    """
 
-
-def extract_stg_loja(conn_input):
     return dwt.read_table(
-        conn=conn_input,
+        conn=connection,
         schema="public",
         table_name="LOJA"
     )
 
 
 def treat_stg_loja(frame, conn_output):
-    try:
-        # df_current = utl.convert_table_to_dataframe(
-        #     conn_input=conn_output,
-        #     schema_name="stage",
-        #     table_name="STG_LOJA"
-        # )
+    """
+    Trata os dados para fazer a slow change stage loja
+    :param frame: dataframe com os dados extraidos
+    :param conn_output: conexão com o banco de daos das stages
+    :return: dataframe com os dados tratados
+    """
 
+    try:
         df_current = dwt.read_table(
             conn=conn_output,
             schema="stage",
@@ -190,6 +189,12 @@ def treat_stg_loja(frame, conn_output):
 
 
 def load_stg_loja(connection):
+    """
+    Carrega a slow change stage venda
+    :param connection: conexão com o banco de dados do cliente
+    :return: None
+    """
+
     utl.create_schema(connection, "stage")
 
     extract_stg_loja(connection).pipe(

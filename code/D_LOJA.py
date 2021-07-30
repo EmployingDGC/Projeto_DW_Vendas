@@ -8,25 +8,13 @@ from sqlalchemy.types import (
 )
 
 
-# def get(conn_input):
-#     return utl.convert_table_to_dataframe(
-#         conn_input=conn_input,
-#         schema_name="stage",
-#         table_name="STG_LOJA",
-#         columns=[
-#             "id_loja",
-#             "id_endereco",
-#             "cnpj",
-#             "nome_loja",
-#             "razao_social",
-#             "data_inicial",
-#             "data_final",
-#             "ativo"
-#         ]
-#     )
-
-
 def extract_dim_loja(connection):
+    """
+    Extrai os dados para fazer a dimensão loja
+    :param connection: conexão com o banco de dados das stages
+    :return: dataframe com o merge das stages loja e endereco
+    """
+
     return dwt.read_table(
         conn=connection,
         schema="stage",
@@ -43,6 +31,12 @@ def extract_dim_loja(connection):
 
 
 def treat_dim_loja(frame):
+    """
+    Trata os dados extraidos para fazer a dimensão loja
+    :param frame: dataframe com os dados extraidos
+    :return: dataframe com os dados tratados para fazer a dimensão loja
+    """
+
     columns_rename = {
         "id_loja": "CD_LOJA",
         "id_endereco": "CD_ENDERECO",
@@ -91,6 +85,12 @@ def treat_dim_loja(frame):
 
 
 def load_dim_loja(connection):
+    """
+    Carrega os dados tratados para fazer a dimensão loja
+    :param connection: conexão com o banco de dados de saída
+    :return: None
+    """
+
     dtypes = {
         "SK_LOJA": Integer(),
         "CD_LOJA": Integer(),

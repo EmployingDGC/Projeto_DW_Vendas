@@ -7,22 +7,13 @@ from sqlalchemy.types import (
 )
 
 
-# def get(conn_input):
-#     return utl.convert_table_to_dataframe(
-#         conn_input=conn_input,
-#         schema_name="stage",
-#         table_name="STG_VENDA",
-#         columns=[
-#             "id_pagamento",
-#             "id_cliente",
-#             "id_func",
-#             "id_loja",
-#             "nfc"
-#         ]
-#     )
-
-
 def extract_fact_venda_produto(connection):
+    """
+    Extrai os dados para fazer a fato venda
+    :param connection: conexão com o banco de dados das stages
+    :return: dataframe com o merge das stages venda e item_venda
+    """
+
     return dwt.read_table(
         conn=connection,
         schema="stage",
@@ -39,6 +30,13 @@ def extract_fact_venda_produto(connection):
 
 
 def treat_fact_venda_produto(frame, connection):
+    """
+    Trata os dados para fazer a fato venda
+    :param frame: dataframe com os dados extraidos
+    :param connection: conexão com o banco de dados das dimensões
+    :return: dataframe com os dados tratados para fazer a fato venda
+    """
+
     columns_rename = {
         "qtd_produto": "QTD_PRODUTO"
     }
@@ -246,6 +244,12 @@ def treat_fact_venda_produto(frame, connection):
 
 
 def load_fact_venda_produto(connection):
+    """
+    Carrega a fato venda no banco de dados do dw
+    :param connection: conexão com o banco de dados de saida
+    :return: None
+    """
+
     dtypes = {
         "SK_PRODUTO": Integer(),
         "SK_CLIENTE": Integer(),

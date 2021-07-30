@@ -1,5 +1,3 @@
-import pandas as pd
-
 import utilities as utl
 
 from sqlalchemy.types import (
@@ -10,13 +8,24 @@ from sqlalchemy.types import (
 
 
 def extract_dim_data():
+    """
+    extrai os dados necessários para criar a dimensão data
+    :return: None
+    """
+
     return utl.generate_date_table(
         start_date="2016-01-01",
         end_date="2030-01-01"
     )
 
 
-def treat(frame):
+def treat_dim_data(frame):
+    """
+    Trata os dados extraidos para criar a dimensão data
+    :param frame: dataframe com os dados extraidos
+    :return: dataframe com a dimensão data pronta
+    """
+
     order_columns = [
         "SK_DATA",
         "DT_REFERENCIA",
@@ -46,6 +55,12 @@ def treat(frame):
 
 
 def load_dim_data(connection):
+    """
+    Carrega a dimensão data
+    :param connection: conexão com o banco de dados de saída
+    :return: None
+    """
+
     dtypes = {
         "SK_DATA": Integer(),
         "DT_REFERENCIA": DateTime(),
@@ -59,7 +74,7 @@ def load_dim_data(connection):
     utl.create_schema(connection, "dw")
 
     extract_dim_data().pipe(
-        func=treat
+        func=treat_dim_data
     ).to_sql(
         name="D_DATA",
         con=connection,

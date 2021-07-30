@@ -8,22 +8,15 @@ from sqlalchemy.types import (
 )
 
 
-# def get(conn_input):
-#     return utl.convert_table_to_dataframe(
-#         conn_input=conn_input,
-#         schema_name="stage",
-#         table_name="STG_FUNCIONARIO",
-#         columns=[
-#             "id_funcionario",
-#             "cpf",
-#             "nome"
-#         ]
-#     )
+def extract_dim_funcionario(connection):
+    """
+    Extrai os dados para fazer a dimensão funcionario
+    :param connection: conexão com o banco de dados das stages
+    :return: dataframe com os dados extraidos
+    """
 
-
-def extract_dim_funcionario(conn_input):
     return dwt.read_table(
-        conn=conn_input,
+        conn=connection,
         schema="stage",
         table_name="STG_FUNCIONARIO",
         columns=[
@@ -35,6 +28,12 @@ def extract_dim_funcionario(conn_input):
 
 
 def treat_dim_funcionario(frame):
+    """
+    Trata os dados para fazer a dimensão funcionario
+    :param frame: dataframe com os dados extraídos
+    :return: dataframe com a dimensão funcionario
+    """
+
     columns_rename = {
         "id_funcionario": "CD_FUNCIONARIO",
         "cpf": "CD_CPF",
@@ -66,6 +65,12 @@ def treat_dim_funcionario(frame):
 
 
 def load_dim_funcionario(connection):
+    """
+    Carrega os dados da dimensão funcionario no dw
+    :param connection: conexão com o banco de dados de saída
+    :return: None
+    """
+
     dtypes = {
         "SK_FUNCIONARIO": Integer(),
         "CD_FUNCIONARIO": Integer(),

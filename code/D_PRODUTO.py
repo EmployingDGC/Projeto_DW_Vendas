@@ -8,24 +8,15 @@ from sqlalchemy.types import (
 )
 
 
-# def get(conn_input):
-#     return utl.convert_table_to_dataframe(
-#         conn_input=conn_input,
-#         schema_name="stage",
-#         table_name="STG_PRODUTO",
-#         columns=[
-#             "id_produto",
-#             "cod_barra",
-#             "nome_produto",
-#             "data_cadastro",
-#             "ativo"
-#         ]
-#     )
+def extract_dim_produto(connection):
+    """
+    Extrai os dados para fazer a dimensão produto
+    :param connection: conexão com o banco de dados das stages
+    :return: dataframe com os dados extraidos da stage produto
+    """
 
-
-def extract_dim_produto(conn_input):
     return dwt.read_table(
-        conn=conn_input,
+        conn=connection,
         schema="stage",
         table_name="STG_PRODUTO",
         columns=[
@@ -39,6 +30,12 @@ def extract_dim_produto(conn_input):
 
 
 def treat_dim_produto(frame):
+    """
+    Trata os dados extraidos para fazer a dimensão produto
+    :param frame: dataframe com os dados extraidos
+    :return: dataframe com os dados tratados para fazer a dimensão produto
+    """
+
     columns_rename = {
         "id_produto": "CD_PRODUTO",
         "cod_barra": "CD_BARRAS",
@@ -73,6 +70,12 @@ def treat_dim_produto(frame):
 
 
 def load_dim_produto(connection):
+    """
+    Carrega a dimensão produto no banco de dados
+    :param connection: conexão com o banco de dados de saída
+    :return: None
+    """
+
     dtypes = {
         "SK_PRODUTO": Integer(),
         "CD_PRODUTO": Integer(),
