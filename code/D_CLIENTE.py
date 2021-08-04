@@ -109,6 +109,10 @@ def treat_dim_cliente(frame, connection):
         )
     ).pipe(
         lambda df: df[~df["FL_TRASH"]]
+    ).rename(
+        columns=rename_columns_x
+    ).filter(
+        items=select_columns
     )
 
 
@@ -135,7 +139,8 @@ def load_dim_cliente(connection):
     utl.create_schema(connection, "dw")
 
     extract_dim_cliente(connection).pipe(
-        func=treat_dim_cliente
+        func=treat_dim_cliente,
+        connection=connection
     ).to_sql(
         name="D_CLIENTE",
         con=connection,

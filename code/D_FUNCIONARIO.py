@@ -27,7 +27,7 @@ def extract_dim_funcionario(connection):
     )
 
 
-def treat_dim_funcionario(frame):
+def treat_dim_funcionario(frame, connection):
     """
     Trata os dados para fazer a dimensão funcionario
     :param frame: dataframe com os dados extraídos
@@ -40,7 +40,7 @@ def treat_dim_funcionario(frame):
         "nome": "NO_FUNCIONARIO"
     }
 
-    order_columns = [
+    select_columns = [
         "SK_FUNCIONARIO",
         "CD_FUNCIONARIO",
         "CD_CPF",
@@ -48,7 +48,15 @@ def treat_dim_funcionario(frame):
         "NO_FUNCIONARIO"
     ]
 
-    return frame.drop_duplicates(
+    rename_columns_x = {
+        "SK_FUNCIONARIO_x": "SK_FUNCIONARIO",
+        "CD_FUNCIONARIO_x": "CD_FUNCIONARIO",
+        "CD_CPF_x": "CD_CPF",
+        "DS_CPF_x": "DS_CPF",
+        "NO_FUNCIONARIO_x": "NO_FUNCIONARIO"
+    }
+
+    new_d_funcionario = frame.drop_duplicates(
         subset=[k for k in frame.keys()]
     ).assign(
         nome=lambda df: utl.convert_column_to_tittle(df.nome),
@@ -60,7 +68,37 @@ def treat_dim_funcionario(frame):
     ).pipe(
         func=utl.insert_default_values_table
     ).filter(
-        items=order_columns
+        items=select_columns
+    )
+
+    try:
+        old_d_funcionario = dwt.read_table(
+            conn=connection,
+            schema="dw",
+            table_name="D_CLIENTE"
+        )
+
+    except:
+        return new_d_funcionario
+
+    return new_d_funcionario.merge(
+        right=old_d_funcionario,
+        how="inner",
+        on="CD_FUNCIONARIO"
+    ).assign(
+        FL_TRASH=lambda df: df.apply(
+            lambda row: (
+                str(row.DS_CPF_x) == str(row.DS_CPF_y) and
+                str(row.NO_FUNCIONARIO_x) == str(row.NO_FUNCIONARIO_y)
+            ),
+            axis=1
+        )
+    ).pipe(
+        lambda df: df[~df["FL_TRASH"]]
+    ).rename(
+        columns=rename_columns_x
+    ).filter(
+        items=select_columns
     )
 
 
@@ -82,12 +120,13 @@ def load_dim_funcionario(connection):
     utl.create_schema(connection, "dw")
 
     extract_dim_funcionario(connection).pipe(
-        func=treat_dim_funcionario
+        func=treat_dim_funcionario,
+        connection=connection
     ).to_sql(
         name="D_FUNCIONARIO",
         con=connection,
         schema="dw",
-        if_exists="replace",
+        if_exists="append",
         index=False,
         chunksize=10000,
         dtype=dtypes
