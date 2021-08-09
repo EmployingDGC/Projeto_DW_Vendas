@@ -1,5 +1,7 @@
 import utilities as utl
 
+import connection as conn
+
 from sqlalchemy.types import (
     Integer,
     String,
@@ -27,22 +29,22 @@ def treat_dim_data(frame):
     """
 
     order_columns = [
-        "SK_DATA",
-        "DT_REFERENCIA",
-        "DT_ANO",
-        "DT_MES",
-        "DT_DIA",
-        "DT_HORA",
-        "DS_TURNO"
+        "sk_data",
+        "dt_referencia",
+        "dt_ano",
+        "dt_mes",
+        "dt_dia",
+        "dt_hora",
+        "ds_turno"
     ]
 
     return frame.assign(
-        DS_TURNO=lambda df: df.apply(
+        ds_turno=lambda df: df.apply(
             lambda row: (
-                "Madrugada" if 0 <= row.DT_HORA < 6 else
-                "Manhã" if 6 <= row.DT_HORA < 12 else
-                "Tarde" if 12 <= row.DT_HORA < 18 else
-                "Noite" if 18 <= row.DT_HORA < 24 else
+                "Madrugada" if 0 <= row.dt_hora < 6 else
+                "Manhã" if 6 <= row.dt_hora < 12 else
+                "Tarde" if 12 <= row.dt_hora < 18 else
+                "Noite" if 18 <= row.dt_hora < 24 else
                 "Desconhecido"
             ),
             axis=1
@@ -54,7 +56,7 @@ def treat_dim_data(frame):
     )
 
 
-def load_dim_data(connection):
+def load_dim_data(frame, connection):
     """
     Carrega a dimensão data
     :param connection: conexão com o banco de dados de saída
@@ -62,21 +64,17 @@ def load_dim_data(connection):
     """
 
     dtypes = {
-        "SK_DATA": Integer(),
-        "DT_REFERENCIA": DateTime(),
-        "DT_ANO": Integer(),
-        "DT_MES": Integer(),
-        "DT_DIA": Integer(),
-        "DT_HORA": Integer(),
-        "DS_TURNO": String()
+        "sk_data": Integer(),
+        "dt_referencia": DateTime(),
+        "dt_ano": Integer(),
+        "dt_mes": Integer(),
+        "dt_dia": Integer(),
+        "dt_hora": Integer(),
+        "ds_turno": String()
     }
 
-    utl.create_schema(connection, "dw")
-
-    extract_dim_data().pipe(
-        func=treat_dim_data
-    ).to_sql(
-        name="D_DATA",
+    frame.to_sql(
+        name="d_data",
         con=connection,
         schema="dw",
         if_exists="replace",
@@ -84,3 +82,24 @@ def load_dim_data(connection):
         chunksize=10000,
         dtype=dtypes
     )
+
+
+def run_dim_data(connection):
+    extract_dim_data().pipe(
+        func=treat_dim_data
+    ).pipe(
+        func=load_dim_data,
+        connection=connection
+    )
+
+
+if __name__ == "__main__":
+    conn_db = conn.create_connection_postgre(
+        server="10.0.0.105",
+        database="projeto_dw_vendas",
+        username="postgres",
+        password="itix.123",
+        port=5432
+    )
+
+    run_dim_data(conn_db)

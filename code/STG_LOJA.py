@@ -2,6 +2,7 @@ import pandas as pd
 
 import utilities as utl
 import DW_TOOLS as dwt
+import connection as conn
 
 from datetime import datetime
 
@@ -20,19 +21,19 @@ def extract_stg_loja(connection):
     )
 
 
-def treat_stg_loja(frame, conn_output):
+def treat_stg_loja(frame, connection):
     """
     Trata os dados para fazer a slow change stage loja
     :param frame: dataframe com os dados extraidos
-    :param conn_output: conexão com o banco de daos das stages
+    :param connection: conexão com o banco de daos das stages
     :return: dataframe com os dados tratados
     """
 
     try:
         df_current = dwt.read_table(
-            conn=conn_output,
+            conn=connection,
             schema="stage",
-            table_name="STG_LOJA"
+            table_name="stg_loja"
         )
     except:
         return frame.assign(
@@ -135,7 +136,7 @@ def treat_stg_loja(frame, conn_output):
         ).pipe(
             lambda df: df[~df.FL_TRASH]
         ).assign(
-            FL_NEW=lambda df: df.apply(
+            fl_new=lambda df: df.apply(
                 lambda row: (
                         str(row.nome_loja_x) == "nan" and
                         str(row.razao_social_x) == "nan" and
@@ -152,10 +153,10 @@ def treat_stg_loja(frame, conn_output):
 
     stores = pd.concat([
         modified_frame.pipe(
-            lambda df: df[df.FL_NEW].filter(select_columns_y).rename(columns=rename_y)
+            lambda df: df[df.fl_new].filter(select_columns_y).rename(columns=rename_y)
         ),
         modified_frame.pipe(
-            lambda df: df[~df.FL_NEW].assign(
+            lambda df: df[~df.fl_new].assign(
                 data_final_x=lambda df1: df.data_inicial_y,
                 ativo_x=lambda df1: 0
             )
@@ -166,7 +167,7 @@ def treat_stg_loja(frame, conn_output):
             ])
         )
     ]).assign(
-        FL_ATIVO=lambda df: df.ativo.apply(
+        fl_ativo=lambda df: df.ativo.apply(
             lambda value: value == 1
         ),
         data_final=lambda df: df.data_final.astype("datetime64[ns]"),
@@ -174,12 +175,12 @@ def treat_stg_loja(frame, conn_output):
     )
 
     stores.pipe(
-        lambda df: df[~df.FL_ATIVO]
+        lambda df: df[~df.fl_ativo]
     ).apply(
         lambda row: utl.delete_register_from_table(
-            conn_output=conn_output,
+            conn_output=connection,
             schema_name="stage",
-            table_name="STG_LOJA",
+            table_name="stg_loja",
             where=f"id_loja = {row.id_loja}"
         ),
         axis=1
@@ -188,23 +189,41 @@ def treat_stg_loja(frame, conn_output):
     return stores.filter(select_columns).drop_duplicates(subset=columns_drop_duplicates)
 
 
-def load_stg_loja(connection):
+def load_stg_loja(frame, connection):
     """
-    Carrega a slow change stage venda
+    Carrega a slow change stage loja
+    :param frame: data frame a stage loja
     :param connection: conexão com o banco de dados do cliente
     :return: None
     """
 
-    utl.create_schema(connection, "stage")
-
-    extract_stg_loja(connection).pipe(
-        func=treat_stg_loja,
-        conn_output=connection
-    ).to_sql(
-        name="STG_LOJA",
+    frame.to_sql(
+        name="stg_loja",
         con=connection,
         schema="stage",
         if_exists="append",
         index=False,
         chunksize=10000
     )
+
+
+def run_stg_loja(connection):
+    extract_stg_loja(connection).pipe(
+        func=treat_stg_loja,
+        connection=connection
+    ).pipe(
+        func=load_stg_loja,
+        connection=connection
+    )
+
+
+if __name__ == "__main__":
+    conn_db = conn.create_connection_postgre(
+        server="10.0.0.105",
+        database="projeto_dw_vendas",
+        username="postgres",
+        password="itix.123",
+        port=5432
+    )
+
+    run_stg_loja(conn_db)

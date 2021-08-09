@@ -1,3 +1,5 @@
+import datetime
+
 import pandas as pd
 import unidecode as ud
 
@@ -315,14 +317,20 @@ def insert_row(df,
 
 def insert_default_values_table(df,
                                 reset_index=False):
+    k_numerics = df.select_dtypes(
+        include="number"
+    ).keys().to_list()
+
+    k_datetime = df.select_dtypes(
+        include="datetime"
+    ).keys().to_list()
+
     df_default = pd.DataFrame(
         data={
             k: [-3, -2, -1]
-            if str(df[k].dtype) == "int64"
-            else [-3.0, -2.0, -1.0]
-            if str(df[k].dtype) == "float64"
-            else ["1900-01-01 00:00:00.000000" for _ in range(3)]
-            if str(df[k].dtype) == "datetime64[ns]"
+            if k in k_numerics
+            else [datetime.datetime(1900, 1, 1) for _ in range(3)]
+            if k in k_datetime
             else ["Desconhecido", "Não Aplicável", "Não Informado"]
             for k in df.keys()
         }

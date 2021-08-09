@@ -1,4 +1,5 @@
 import utilities as utl
+import connection as conn
 import DW_TOOLS as dwt
 
 from sqlalchemy.types import (
@@ -18,7 +19,7 @@ def extract_dim_funcionario(connection):
     return dwt.read_table(
         conn=connection,
         schema="stage",
-        table_name="STG_FUNCIONARIO",
+        table_name="stg_funcionario",
         columns=[
             "id_funcionario",
             "cpf",
@@ -35,34 +36,29 @@ def treat_dim_funcionario(frame, connection):
     """
 
     columns_rename = {
-        "id_funcionario": "CD_FUNCIONARIO",
-        "cpf": "CD_CPF",
-        "nome": "NO_FUNCIONARIO"
+        "id_funcionario": "cd_funcionario",
+        "cpf": "nu_cpf",
+        "nome": "no_funcionario"
     }
 
     select_columns = [
-        "SK_FUNCIONARIO",
-        "CD_FUNCIONARIO",
-        "CD_CPF",
-        "DS_CPF",
-        "NO_FUNCIONARIO"
+        "sk_funcionario",
+        "cd_funcionario",
+        "nu_cpf",
+        "no_funcionario"
     ]
 
     rename_columns_x = {
-        "SK_FUNCIONARIO_x": "SK_FUNCIONARIO",
-        "CD_FUNCIONARIO_x": "CD_FUNCIONARIO",
-        "CD_CPF_x": "CD_CPF",
-        "DS_CPF_x": "DS_CPF",
-        "NO_FUNCIONARIO_x": "NO_FUNCIONARIO"
+        "sk_funcionario_x": "sk_funcionario",
+        "cd_funcionario_x": "cd_funcionario",
+        "nu_cpf_x": "nu_cpf",
+        "no_funcionario_x": "no_funcionario"
     }
 
     new_d_funcionario = frame.drop_duplicates(
         subset=[k for k in frame.keys()]
     ).assign(
-        nome=lambda df: utl.convert_column_to_tittle(df.nome),
-        cpf=lambda df: utl.convert_column_cpf_to_int64(df.cpf, -3),
-        DS_CPF=lambda df: utl.convert_int_cpf_to_format_cpf(df.cpf),
-        SK_FUNCIONARIO=lambda df: utl.create_index_dataframe(df, 1)
+        sk_funcionario=lambda df: utl.create_index_dataframe(df, 1)
     ).rename(
         columns=columns_rename
     ).pipe(
@@ -75,7 +71,7 @@ def treat_dim_funcionario(frame, connection):
         old_d_funcionario = dwt.read_table(
             conn=connection,
             schema="dw",
-            table_name="D_CLIENTE"
+            table_name="d_cliente"
         )
 
     except:
@@ -84,17 +80,17 @@ def treat_dim_funcionario(frame, connection):
     return new_d_funcionario.merge(
         right=old_d_funcionario,
         how="inner",
-        on="CD_FUNCIONARIO"
+        on="cd_funcionario"
     ).assign(
-        FL_TRASH=lambda df: df.apply(
+        fl_trash=lambda df: df.apply(
             lambda row: (
-                str(row.DS_CPF_x) == str(row.DS_CPF_y) and
-                str(row.NO_FUNCIONARIO_x) == str(row.NO_FUNCIONARIO_y)
+                str(row.nu_cpf_x) == str(row.nu_cpf_y) and
+                str(row.no_funcionario_x) == str(row.no_funcionario_y)
             ),
             axis=1
         )
     ).pipe(
-        lambda df: df[~df["FL_TRASH"]]
+        lambda df: df[~df["fl_trash"]]
     ).rename(
         columns=rename_columns_x
     ).filter(
@@ -102,7 +98,7 @@ def treat_dim_funcionario(frame, connection):
     )
 
 
-def load_dim_funcionario(connection):
+def load_dim_funcionario(frame, connection):
     """
     Carrega os dados da dimensão funcionario no dw
     :param connection: conexão com o banco de dados de saída
@@ -110,20 +106,16 @@ def load_dim_funcionario(connection):
     """
 
     dtypes = {
-        "SK_FUNCIONARIO": Integer(),
-        "CD_FUNCIONARIO": Integer(),
-        "CD_CPF": BigInteger(),
-        "DS_CPF": String(),
-        "NO_FUNCIONARIO": String()
+        "sk_funcionario": Integer(),
+        "cd_funcionario": Integer(),
+        "nu_cpf": BigInteger(),
+        "no_funcionario": String()
     }
 
     utl.create_schema(connection, "dw")
 
-    extract_dim_funcionario(connection).pipe(
-        func=treat_dim_funcionario,
-        connection=connection
-    ).to_sql(
-        name="D_FUNCIONARIO",
+    frame.to_sql(
+        name="d_funcionario",
         con=connection,
         schema="dw",
         if_exists="append",
@@ -131,3 +123,24 @@ def load_dim_funcionario(connection):
         chunksize=10000,
         dtype=dtypes
     )
+
+
+def run_dim_funcionario(connection):
+    extract_dim_funcionario(connection).pipe(
+        func=treat_dim_funcionario
+    ).pipe(
+        func=load_dim_funcionario,
+        connection=connection
+    )
+
+
+if __name__ == "__main__":
+    conn_db = conn.create_connection_postgre(
+        server="10.0.0.105",
+        database="projeto_dw_vendas",
+        username="postgres",
+        password="itix.123",
+        port=5432
+    )
+
+    run_dim_funcionario(conn_db)

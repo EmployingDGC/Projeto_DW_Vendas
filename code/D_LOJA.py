@@ -1,4 +1,5 @@
 import utilities as utl
+import connection as conn
 import DW_TOOLS as dwt
 
 from sqlalchemy.types import (
@@ -18,12 +19,12 @@ def extract_dim_loja(connection):
     return dwt.read_table(
         conn=connection,
         schema="stage",
-        table_name="STG_LOJA"
+        table_name="stg_loja"
     ).merge(
         right=dwt.read_table(
             conn=connection,
             schema="stage",
-            table_name="STG_ENDERECO"
+            table_name="stg_endereco"
         ),
         how="inner",
         on="id_endereco"
@@ -38,45 +39,44 @@ def treat_dim_loja(frame):
     """
 
     columns_rename = {
-        "id_loja": "CD_LOJA",
-        "id_endereco": "CD_ENDERECO",
-        "telefone": "NU_TELEFONE",
-        "data_inicial": "DT_INICIAL",
-        "data_final": "DT_FINAL",
-        "ativo": "FL_ATIVO"
+        "id_loja": "cd_loja",
+        "id_endereco": "cd_endereco",
+        "telefone": "nu_telefone",
+        "data_inicial": "dt_inicial",
+        "data_final": "dt_final",
+        "ativo": "fl_ativo"
     }
 
     select_columns = [
-        "SK_LOJA",
-        "CD_LOJA",
-        "CD_ENDERECO",
-        "NU_CNPJ",
-        "NU_TELEFONE",
-        "NO_LOJA",
-        "NO_RAZAO_SOCIAL",
-        "NO_ESTADO",
-        "NO_CIDADE",
-        "NO_BAIRRO",
-        "NO_RUA",
-        "DT_INICIAL",
-        "DT_FINAL",
-        "FL_ATIVO"
+        "sk_loja",
+        "cd_loja",
+        "cd_endereco",
+        "nu_cnpj",
+        "nu_telefone",
+        "no_loja",
+        "no_razao_social",
+        "no_estado",
+        "no_cidade",
+        "no_bairro",
+        "no_rua",
+        "dt_inicial",
+        "dt_final",
+        "fl_ativo"
     ]
 
     return frame.assign(
-        NU_CNPJ=lambda df: df.cnpj.str.replace("-", "").str.strip(),
-        NO_LOJA=lambda df: df.nome_loja.str.upper().str.strip(),
-        NO_RAZAO_SOCIAL=lambda df: df.razao_social.str.upper().str.strip(),
-        SK_LOJA=lambda df: utl.create_index_dataframe(df, 1),
-        NO_ESTADO=lambda df: df.estado.str.upper().str.strip(),
-        NO_CIDADE=lambda df: df.cidade.str.upper().str.strip(),
-        NO_BAIRRO=lambda df: df.bairro.str.upper().str.strip(),
-        NO_RUA=lambda df: df.rua.str.upper().str.strip()
+        nu_cnpj=lambda df: df.cnpj,
+        no_loja=lambda df: df.nome_loja,
+        no_razao_social=lambda df: df.razao_social,
+        sk_loja=lambda df: utl.create_index_dataframe(df, 1),
+        no_estado=lambda df: df.estado,
+        no_cidade=lambda df: df.cidade,
+        no_bairro=lambda df: df.bairro,
+        no_rua=lambda df: df.rua,
+        dt_inicial=lambda df: df.data_inicial.astype("datetime64[ns]"),
+        dt_final=lambda df: df.data_final.astype("datetime64[ns]")
     ).rename(
         columns=columns_rename
-    ).assign(
-        DT_INICIAL=lambda df: df.DT_INICIAL.astype("datetime64[ns]"),
-        DT_FINAL=lambda df: df.DT_FINAL.astype("datetime64[ns]")
     ).pipe(
         func=utl.insert_default_values_table
     ).filter(
@@ -84,7 +84,7 @@ def treat_dim_loja(frame):
     )
 
 
-def load_dim_loja(connection):
+def load_dim_loja(frame, connection):
     """
     Carrega os dados tratados para fazer a dimensão loja
     :param connection: conexão com o banco de dados de saída
@@ -92,27 +92,23 @@ def load_dim_loja(connection):
     """
 
     dtypes = {
-        "SK_LOJA": Integer(),
-        "CD_LOJA": Integer(),
-        "CD_ENDERECO": Integer(),
-        "NU_CNPJ": String(),
-        "NU_TELEFONE": String(),
-        "NO_LOJA": String(),
-        "NO_RAZAO_SOCIAL": String(),
-        "NO_ESTADO": String(),
-        "NO_CIDADE": String(),
-        "NO_BAIRRO": String(),
-        "NO_RUA": String(),
-        "DT_INICIAL": DateTime(),
-        "DT_FINAL": DateTime(),
-        "FL_ATIVO": Integer()
+        "sk_loja": Integer(),
+        "cd_loja": Integer(),
+        "cd_endereco": Integer(),
+        "nu_cnpj": String(),
+        "nu_telefone": String(),
+        "no_loja": String(),
+        "no_razao_social": String(),
+        "no_estado": String(),
+        "no_cidade": String(),
+        "no_bairro": String(),
+        "no_rua": String(),
+        "dt_inicial": DateTime(),
+        "dt_final": DateTime(),
+        "fl_ativo": Integer()
     }
 
-    utl.create_schema(connection, "dw")
-
-    extract_dim_loja(connection).pipe(
-        func=treat_dim_loja
-    ).to_sql(
+    frame.to_sql(
         name="D_LOJA",
         con=connection,
         schema="dw",
@@ -121,3 +117,24 @@ def load_dim_loja(connection):
         chunksize=10000,
         dtype=dtypes
     )
+
+
+def run_dim_loja(connection):
+    extract_dim_loja(connection).pipe(
+        func=treat_dim_loja
+    ).pipe(
+        func=load_dim_loja,
+        connection=connection
+    )
+
+
+if __name__ == "__main__":
+    conn_db = conn.create_connection_postgre(
+        server="10.0.0.105",
+        database="projeto_dw_vendas",
+        username="postgres",
+        password="itix.123",
+        port=5432
+    )
+
+    run_dim_loja(conn_db)
