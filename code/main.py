@@ -8,9 +8,7 @@ import pandas as pd
 
 
 import connection as conn
-
 import stages as stg
-
 import utilities as utl
 
 import STG_LOJA
@@ -85,7 +83,8 @@ if __name__ == "__main__":
             op_kwargs={
                 "database": conn_db,
                 "schema_name": "stage"
-            }
+            },
+            dag=dag
         )
 
         vertex_schema_dw = PythonOperator(
@@ -94,139 +93,164 @@ if __name__ == "__main__":
             op_kwargs={
                 "database": conn_db,
                 "schema_name": "dw"
-            }
+            },
+            dag=dag
         )
 
         vertex_stg_cliente = PythonOperator(
             task_id="vertex_stg_cliente",
             python_callable=stg.run_stg_cliente,
-            op_kwargs={"connection": conn_db}
+            op_kwargs={"connection": conn_db},
+            dag=dag
         )
 
         vertex_stg_endereco = PythonOperator(
             task_id="vertex_stg_endereco",
             python_callable=stg.run_stg_endereco,
-            op_kwargs={"connection": conn_db}
+            op_kwargs={"connection": conn_db},
+            dag=dag
         )
 
         vertex_stg_forma_pagamento = PythonOperator(
             task_id="vertex_stg_forma_pagamento",
             python_callable=stg.run_stg_forma_pagamento,
-            op_kwargs={"connection": conn_db}
+            op_kwargs={"connection": conn_db},
+            dag=dag
         )
 
         vertex_stg_funcionario = PythonOperator(
             task_id="vertex_stg_funcionario",
             python_callable=stg.run_stg_funcionario,
-            op_kwargs={"connection": conn_db}
+            op_kwargs={"connection": conn_db},
+            dag=dag
         )
 
         vertex_stg_item_venda = PythonOperator(
             task_id="vertex_stg_item_venda",
             python_callable=stg.run_stg_item_venda,
-            op_kwargs={"connection": conn_db}
+            op_kwargs={"connection": conn_db},
+            dag=dag
         )
 
         vertex_stg_loja = PythonOperator(
             task_id="vertex_stg_loja",
             python_callable=STG_LOJA.run_stg_loja,
-            op_kwargs={"connection": conn_db}
+            op_kwargs={"connection": conn_db},
+            dag=dag
         )
 
         vertex_stg_produto = PythonOperator(
             task_id="vertex_stg_produto",
             python_callable=STG_PRODUTO.run_stg_produto,
-            op_kwargs={"connection": conn_db}
+            op_kwargs={"connection": conn_db},
+            dag=dag
         )
 
         vertex_stg_venda = PythonOperator(
             task_id="vertex_stg_venda",
             python_callable=stg.run_stg_venda,
-            op_kwargs={"connection": conn_db}
+            op_kwargs={"connection": conn_db},
+            dag=dag
         )
 
         vertex_d_cliente = PythonOperator(
             task_id="vertex_d_cliente",
             python_callable=D_CLIENTE.run_dim_cliente,
-            op_kwargs={"connection": conn_db}
+            op_kwargs={"connection": conn_db},
+            dag=dag
         )
 
         vertex_d_data = PythonOperator(
             task_id="vertex_d_data",
             python_callable=D_DATA.run_dim_data,
-            op_kwargs={"connection": conn_db}
+            op_kwargs={"connection": conn_db},
+            dag=dag
         )
 
         vertex_d_funcionario = PythonOperator(
             task_id="vertex_d_funcionario",
             python_callable=D_FUNCIONARIO.run_dim_funcionario,
-            op_kwargs={"connection": conn_db}
+            op_kwargs={"connection": conn_db},
+            dag=dag
         )
 
         vertex_d_loja = PythonOperator(
             task_id="vertex_d_loja",
             python_callable=D_LOJA.run_dim_loja,
-            op_kwargs={"connection": conn_db}
+            op_kwargs={"connection": conn_db},
+            dag=dag
         )
 
         vertex_d_produto = PythonOperator(
             task_id="vertex_d_produto",
             python_callable=D_PRODUTO.run_dim_produto,
-            op_kwargs={"connection": conn_db}
+            op_kwargs={"connection": conn_db},
+            dag=dag
         )
 
         vertex_d_tipo_pagamento = PythonOperator(
             task_id="vertex_d_tipo_pagamento",
             python_callable=D_TIPO_PAGAMENTO.run_dim_tipo_pagamento,
-            op_kwargs={"connection": conn_db}
+            op_kwargs={"connection": conn_db},
+            dag=dag
         )
 
         vertex_f_venda_produto = PythonOperator(
             task_id="vertex_f_venda_produto",
             python_callable=F_VENDA_PRODUTO.run_fact_venda_produto,
-            op_kwargs={"connection": conn_db}
+            op_kwargs={"connection": conn_db},
+            dag=dag
         )
+
+        vertex_schema_dw >> [
+            vertex_d_cliente,
+            vertex_d_data,
+            vertex_d_funcionario,
+            vertex_d_loja,
+            vertex_d_produto,
+            vertex_d_tipo_pagamento,
+            vertex_f_venda_produto
+        ]
+        
+        vertex_schema_stage >> [
+            vertex_stg_cliente,
+            vertex_stg_endereco,
+            vertex_stg_forma_pagamento,
+            vertex_stg_funcionario,
+            vertex_stg_item_venda,
+            vertex_stg_loja,
+            vertex_stg_produto,
+            vertex_stg_venda
+        ]
 
         [
             vertex_schema_stage,
-            vertex_schema_dw,
             vertex_stg_cliente,
             vertex_stg_endereco
         ] >> vertex_d_cliente
 
         [
-            vertex_schema_stage,
             vertex_schema_dw,
         ] >> vertex_d_data
 
         [
-            vertex_schema_stage,
-            vertex_schema_dw,
             vertex_stg_funcionario
         ] >> vertex_d_funcionario
 
         [
-            vertex_schema_stage,
-            vertex_schema_dw,
             vertex_stg_loja,
             vertex_stg_endereco
         ] >> vertex_d_loja
 
         [
-            vertex_schema_stage,
-            vertex_schema_dw,
             vertex_stg_produto
         ] >> vertex_d_produto
 
         [
-            vertex_schema_stage,
-            vertex_schema_dw,
             vertex_stg_forma_pagamento
         ] >> vertex_d_tipo_pagamento
 
         [
-            vertex_schema_stage,
-            vertex_schema_dw,
             vertex_d_cliente,
             vertex_d_data,
             vertex_d_funcionario,
