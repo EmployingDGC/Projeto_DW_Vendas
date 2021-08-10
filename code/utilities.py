@@ -519,53 +519,53 @@ def generate_date_table(start_date,
     """
 
     order_columns = [
-        "SK_DATA",
-        "DT_REFERENCIA",
-        "DT_SEMESTRE",
-        "DT_TRIMESTRE",
-        "DT_BIMESTRE",
-        "DT_ANO",
-        "DT_MES",
-        "DT_DIA",
-        "DT_HORA",
-        "DT_MINUTO",
-        "DT_SEGUNDO"
+        "sk_data",
+        "dt_referencia",
+        "dt_semestre",
+        "dt_trimestre",
+        "dt_bimestre",
+        "dt_ano",
+        "dt_mes",
+        "dt_dia",
+        "dt_hora",
+        "dt_minuto",
+        "dt_segundo"
     ]
 
     return pd.DataFrame({
-        "DT_REFERENCIA": pd.date_range(
+        "dt_referencia": pd.date_range(
             start=start_date,
             end=end_date,
             freq=frequency
         )
     }).assign(
-        SK_DATA=lambda df: create_index_dataframe(df, 1),
-        DT_ANO=lambda df: df.DT_REFERENCIA.apply(
+        sk_data=lambda df: create_index_dataframe(df, 1),
+        dt_ano=lambda df: df.dt_referencia.apply(
             lambda value: value.year
         ),
-        DT_MES=lambda df: df.DT_REFERENCIA.apply(
+        dt_mes=lambda df: df.dt_referencia.apply(
             lambda value: value.month
         ),
-        DT_DIA=lambda df: df.DT_REFERENCIA.apply(
+        dt_dia=lambda df: df.dt_referencia.apply(
             lambda value: value.day
         ),
-        DT_HORA=lambda df: df.DT_REFERENCIA.apply(
+        dt_hora=lambda df: df.dt_referencia.apply(
             lambda value: value.hour
         ),
-        DT_MINUTO=lambda df: df.DT_REFERENCIA.apply(
+        dt_minuto=lambda df: df.dt_referencia.apply(
             lambda value: value.minute
         ),
-        DT_SEGUNDO=lambda df: df.DT_REFERENCIA.apply(
+        dt_segundo=lambda df: df.dt_referencia.apply(
             lambda value: value.second
         ),
-        DT_SEMESTRE=lambda df: df.DT_MES.apply(
+        dt_semestre=lambda df: df.dt_mes.apply(
             func=lambda value: (
                 1
                 if 1 <= value <= 6
                 else 2
             )
         ),
-        DT_TRIMESTRE=lambda df: df.DT_MES.apply(
+        dt_trimestre=lambda df: df.dt_mes.apply(
             func=lambda value: (
                 1
                 if 1 <= value <= 3
@@ -576,7 +576,7 @@ def generate_date_table(start_date,
                 else 4
             )
         ),
-        DT_BIMESTRE=lambda df: df.DT_MES.apply(
+        dt_bimestre=lambda df: df.dt_mes.apply(
             func=lambda value: (
                 1
                 if 1 <= value <= 2
