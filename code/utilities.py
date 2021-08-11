@@ -25,6 +25,8 @@ def convert_two_list_in_dict(keys,
 
 def create_index_dataframe(data_frame,
                            first_index=0):
+    first_index = int(first_index)
+
     return [i + first_index for i in range(data_frame.shape[0])]
 
 
