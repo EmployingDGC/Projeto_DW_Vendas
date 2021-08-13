@@ -16,7 +16,7 @@ def extract_dim_produto(connection):
     :return: dataframe com os dados extraidos da stage produto
     """
 
-    return dwt.read_table(
+    stg_produto = dwt.read_table(
         conn=connection,
         schema="stage",
         table_name="stg_produto",
@@ -28,6 +28,8 @@ def extract_dim_produto(connection):
             "ativo"
         ]
     )
+
+    return stg_produto
 
 
 def treat_dim_produto(frame):

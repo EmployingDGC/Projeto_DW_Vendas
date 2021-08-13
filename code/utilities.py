@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 
 import pandas as pd
 import unidecode as ud
@@ -331,7 +331,7 @@ def insert_default_values_table(df,
         data={
             k: [-3, -2, -1]
             if k in k_numerics
-            else [datetime.datetime(1900, 1, 1) for _ in range(3)]
+            else [dt.datetime(1900, 1, 1) for _ in range(3)]
             if k in k_datetime
             else ["Desconhecido", "Não Aplicável", "Não Informado"]
             for k in df.keys()
@@ -435,7 +435,7 @@ def create_sk_turno(column):
 def create_table(conn_output,
                  schema_name,
                  table_name,
-                 table_vars: dict[str, str]):
+                 table_vars):
     str_vars = ""
 
     for k, v in table_vars.items():
