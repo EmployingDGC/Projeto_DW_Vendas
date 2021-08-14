@@ -1,38 +1,38 @@
 import pandas as pd
 import DW_TOOLS as dwt
-import CONEXAO as con
+import connection as con
 from sqlalchemy.types import Integer, String
 from pandasql import sqldf
 import sqlalchemy as sqla
 
-def extract_dim_cliente(con_out):
+def extract_dim_cliente(connection):
 
-    tbl_cliente = dwt.read_table(conn=con_out, schema="stage", table_name="stg_cliente",
+    tbl_cliente = dwt.read_table(conn=connection, schema="stage", table_name="stg_cliente",
                                  columns=["id_cliente", "nome", "cpf", "tel",
                                           "id_endereco"])
 
-    stg_endereco = dwt.read_table(conn=con_out, schema="stage", table_name="stg_endereco",
+    stg_endereco = dwt.read_table(conn=connection, schema="stage", table_name="stg_endereco",
                                   columns=["id_endereco", "estado", "cidade", "bairro",
                                            "rua"])
 
-    stg_clinte = (
+    stg_cliente = (
         tbl_cliente.merge(right=stg_endereco, left_on="id_endereco", right_on="id_endereco",
                           how="left", suffixes=["_01", "_02"])
     )
 
-    if sqla.inspect(con_out).has_table(table_name='d_cliente', schema='dw'):
+    if sqla.inspect(connection).has_table(table_name='d_cliente', schema='dw'):
         query = """
             SELECT stg.*
-            FROM stg_clinte stg
+            FROM stage.stg_cliente stg
             LEFT JOIN dw.d_cliente cliente 
             ON (stg.id_cliente = cliente.cd_cliente)
             WHERE cliente.cd_cliente IS NULL
         """
-        stg_clinte = sqldf(query, {"stg_clinte": stg_clinte}, con_out.url)
+        stg_cliente = sqldf(query, {"stg_clinte": stg_cliente}, connection.url)
 
-    return stg_clinte
+    return stg_cliente
 
-def treat_dim_cliente(con_out, tbl, exists_dim):
+def treat_dim_cliente(connection, tbl, exists_dim):
     columns_select = ['id_cliente', 'nome', 'cpf', 'tel', 'id_endereco', 'estado',
                       'cidade', 'bairro', 'rua']
 
@@ -57,8 +57,8 @@ def treat_dim_cliente(con_out, tbl, exists_dim):
 
     if exists_dim:
 
-        sk_index = dwt.find_sk(conn=con_out, schema_name='dw', table_name='d_cliente',
-                              sk_name='sk_cliente')
+        sk_index = dwt.find_sk(conn=connection, schema_name='dw', table_name='d_cliente',
+                               sk_name='sk_cliente')
 
         dim_cliente.insert(0, "sk_cliente", range(sk_index, sk_index + len(dim_cliente)))
 
@@ -79,7 +79,7 @@ def treat_dim_cliente(con_out, tbl, exists_dim):
 
     return dim_cliente
 
-def load_dim_cliente(d_cliente, con_out):
+def load_dim_cliente(d_cliente, connection):
 
     data_types = {
         'sk_cliente': Integer(), 'cd_cliente': Integer(), 'no_cliente': String(),
@@ -91,24 +91,26 @@ def load_dim_cliente(d_cliente, con_out):
     (
         d_cliente.
             astype('string').
-            to_sql(name="d_cliente", con=con_out, schema="dw", if_exists="append",
+            to_sql(name="d_cliente", con=connection, schema="dw", if_exists="append",
                    dtype=data_types, index=False)
     )
 
-def run_dim_cliente(conn_output):
+def run_dim_cliente(connection):
 
-    fl_dim = sqla.inspect(conn_output).has_table(table_name='d_cliente', schema='dw')
+    # testa 2x
+    fl_dim = sqla.inspect(connection).has_table(table_name='d_cliente', schema='dw')
 
-    tbl_cliente = extract_dim_cliente(con_out=conn_output)
+    tbl_cliente = extract_dim_cliente(connection=connection)
 
+    # não trata o update?
     if tbl_cliente.shape[0] != 0:
         (
-            treat_dim_cliente(con_out=conn_output, tbl=tbl_cliente, exists_dim=fl_dim).
-                pipe(load_dim_cliente, con_out=conn_output)
+            treat_dim_cliente(connection=connection, tbl=tbl_cliente, exists_dim=fl_dim).
+                pipe(load_dim_cliente, con_out=connection)
         )
 
 if __name__ == '__main__':
 
-    conexao_postgre = con.connect_postgre("127.0.0.1,", "ProjetoDW_Vendas",
-                                          "airflow", "666itix", 5432)
+    conexao_postgre = con.create_connection_postgre("127.0.0.1,", "ProjetoDW_Vendas",
+                                                    "airflow", "666itix", 5432)
     run_dim_cliente(conexao_postgre)

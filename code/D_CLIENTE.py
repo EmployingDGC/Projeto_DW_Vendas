@@ -2,6 +2,9 @@ import utilities as utl
 import DW_TOOLS as dwt
 import connection as conn
 
+import sqlalchemy as sqla
+from pandasql import sqldf
+
 from sqlalchemy.types import (
     Integer,
     String
@@ -15,6 +18,10 @@ def extract_dim_cliente(connection):
     :return: dataframe com o merge das stages cliente e endereço
     """
 
+    # stg_cliente = dwt.read_table(conn=connection, schema="stage", table_name="stg_cliente",
+    #                              columns=["id_cliente", "nome", "cpf", "tel",
+    #                                       "id_endereco"])
+
     stg_cliente = dwt.read_table(
         conn=connection,
         schema="stage",
@@ -27,18 +34,28 @@ def extract_dim_cliente(connection):
         ]
     )
 
+    # stg_endereco = dwt.read_table(conn=connection, schema="stage", table_name="stg_endereco",
+    #                               columns=["id_endereco", "estado", "cidade", "bairro",
+    #                                        "rua"])
+
     stg_endereco = dwt.read_table(
         conn=connection,
         schema="stage",
         table_name="stg_endereco"
     )
 
+    # merge_stg_cliente_endereco = (
+    #     stg_cliente.merge(right=stg_endereco, left_on="id_endereco", right_on="id_endereco",
+    #                       how="left", suffixes=["_01", "_02"])
+    # )
+
     merge_stg_cliente_endereco = stg_cliente.merge(
         right=stg_endereco,
-        how="inner",
+        how="left",
         on="id_endereco"
     )
 
+    # if sqla.inspect(connection).has_table(table_name='d_cliente', schema='dw'):
     try:
         old_d_cliente = dwt.read_table(
             conn=connection,
@@ -49,11 +66,27 @@ def extract_dim_cliente(connection):
     except:
         return merge_stg_cliente_endereco
 
+    # query = """
+    #     SELECT sc.*
+    #     FROM stage.stg_cliente as sc
+    #     LEFT JOIN dw.d_cliente as dc
+    #     ON (sc.id_cliente = dc.cd_cliente)
+    #     WHERE dc.cd_cliente IS NULL
+    # """
+    #
+    # merge_stgs_dim = sqldf(
+    #     query=query,
+    #     env={"stg_clinte": merge_stg_cliente_endereco},
+    #     db_uri=connection.url
+    # )
+
     merge_stgs_dim = merge_stg_cliente_endereco.merge(
         right=old_d_cliente,
         how="left",
         left_on="id_cliente",
         right_on="cd_cliente"
+    ).pipe(
+        func=lambda df: df[df.cd_cliente.isnull()]
     )
 
     return merge_stgs_dim
@@ -67,12 +100,29 @@ def treat_dim_cliente(frame, connection):
     """
 
     try:
-        last_sk = frame.iloc[-1].sk_cliente + 1
+        last_sk = dwt.read_table(
+            conn=connection,
+            schema="dw",
+            table_name="d_cliente",
+            columns=["sk_cliente"]
+        ).sk_cliente.max() + 1
 
     except:
         last_sk = 1
 
-    select_columns = [
+    select_columns_new = [
+        "sk_cliente",
+        "id_cliente",
+        "nome",
+        "cpf",
+        "id_endereco",
+        "estado",
+        "cidade",
+        "bairro",
+        "rua"
+    ]
+
+    select_columns_old = [
         "sk_cliente",
         "cd_cliente",
         "no_cliente",
@@ -84,51 +134,34 @@ def treat_dim_cliente(frame, connection):
         "no_rua"
     ]
 
-    try:
-        d_cliente_temp = frame.assign(
-            fl_trash=lambda df: df.apply(
-                lambda row: (
-                        row.nome == row.no_cliente and
-                        row.cpf == row.nu_cpf and
-                        row.id_endereco == row.cd_endereco
-                ),
-                axis=1
-            )
-        ).pipe(
-            lambda df: df[~df["fl_trash"]]
+    rename_columns = {
+        "id_cliente": "cd_cliente",
+        "nome": "no_cliente",
+        "cpf": "nu_cpf",
+        "id_endereco": "cd_endereco",
+        "estado": "no_estado",
+        "cidade": "no_cidade",
+        "bairro": "no_bairro",
+        "rua": "no_rua"
+    }
+
+    if not "sk_cliente" in frame.columns.to_list():
+        d_cliente = frame.filter(
+            items=select_columns_new
+        ).rename(
+            columns=rename_columns,
+        ).assign(
+            sk_cliente=lambda df: utl.create_index_dataframe(df, last_sk)
+        ).filter(
+            items=select_columns_old
         )
 
-    except:
-        d_cliente_temp = frame.pipe(
-            func=utl.insert_default_values_table
+    else:
+        d_cliente = frame.filter(
+            items=select_columns_old
         )
 
-    d_cliente = d_cliente_temp.assign(
-        cd_cliente=lambda df: df.id_cliente.astype("Int64"),
-        nu_cpf=lambda df: df.cpf,
-        no_cliente=lambda df: df.nome,
-        cd_endereco=lambda df: df.id_endereco.astype("Int64"),
-        no_estado=lambda df: df.estado,
-        no_cidade=lambda df: df.cidade,
-        no_bairro=lambda df: df.bairro,
-        no_rua=lambda df: df.rua,
-    )
-
-    d_cliente.apply(
-        lambda row: utl.delete_register_from_table(
-            conn_output=connection,
-            schema_name="dw",
-            table_name="d_cliente",
-            where=f"sk_cliente = {row.sk_cliente}"
-        ),
-        axis=1
-    )
-
-    return d_cliente.assign(
-        sk_cliente=lambda df: utl.create_index_dataframe(df, last_sk)
-    ).filter(
-        items=select_columns
-    )
+    return d_cliente
 
 
 def load_dim_cliente(frame, connection):
@@ -162,10 +195,17 @@ def load_dim_cliente(frame, connection):
 
 
 def run_dim_cliente(connection):
-    extract_dim_cliente(connection).pipe(
+    df_extract = extract_dim_cliente(connection)
+
+    if df_extract.empty:
+        return
+
+    df_treat = df_extract.pipe(
         func=treat_dim_cliente,
         connection=connection
-    ).pipe(
+    )
+
+    df_treat.pipe(
         func=load_dim_cliente,
         connection=connection
     )
