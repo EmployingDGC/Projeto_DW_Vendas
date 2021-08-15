@@ -100,22 +100,22 @@ def extract_dim_loja(connection):
 
     try:
         query = """
-            SELECT msld.*, dim.dt_vigencia_fim,
+            SELECT msld.*, dl.dt_vigencia_fim,
                 CASE
-                    WHEN dim.cd_loja IS NULL 
+                    WHEN dl.cd_loja IS NULL 
                         THEN 'I'
                     WHEN (
-                        dim.cd_endereco         != msld.id_endereco
-                        OR dim.ds_razao_social  != msld.razao_social
-                        OR dim.nu_cnpj          != msld.cnpj
+                        dl.cd_endereco         != msld.id_endereco
+                        OR dl.ds_razao_social  != msld.razao_social
+                        OR dl.nu_cnpj          != msld.cnpj
                     )
                         THEN 'U'
                     ELSE 'N'
                 END as fl_iun
             FROM merge_stgs_loja_endereco as msld
-            LEFT JOIN dw.d_loja as dim 
-                ON (msld.id_loja = dim.cd_loja)
-                AND dim.fl_ativo = 1
+            LEFT JOIN dw.d_loja as dl 
+                ON (msld.id_loja = dl.cd_loja)
+                AND dl.fl_ativo = 1
         """
 
         iun_d_loja = sqldf(
@@ -129,7 +129,9 @@ def extract_dim_loja(connection):
         return iun_d_loja
 
     except:
-        return merge_stgs_loja_endereco
+        return merge_stgs_loja_endereco.assign(
+            fl_iun="I"
+        )
 
 
 def treat_dim_loja(frame, connection):
@@ -188,7 +190,6 @@ def treat_dim_loja(frame, connection):
             query=query,
             db_uri=connection.url
         ).sk_loja) + 1
-
 
     except:
         sk_index = 1
