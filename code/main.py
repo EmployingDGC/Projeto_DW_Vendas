@@ -11,9 +11,6 @@ import connection as conn
 import stages as stg
 import utilities as utl
 
-import STG_LOJA
-import STG_PRODUTO
-
 import D_CLIENTE
 import D_DATA
 import D_FUNCIONARIO
@@ -31,8 +28,8 @@ def run_stg(connection):
     stg.run_stg_forma_pagamento(connection)
     stg.run_stg_funcionario(connection)
     stg.run_stg_item_venda(connection)
-    STG_LOJA.run_stg_loja(connection)
-    STG_PRODUTO.run_stg_produto(connection)
+    stg.run_stg_loja(connection)
+    stg.run_stg_produto(connection)
     stg.run_stg_venda(connection)
 
 
@@ -136,14 +133,14 @@ with DAG(
 
     vertex_stg_loja = PythonOperator(
         task_id="vertex_stg_loja",
-        python_callable=STG_LOJA.run_stg_loja,
+        python_callable=stg.run_stg_loja,
         op_kwargs={"connection": conn_db},
         dag=dag
     )
 
     vertex_stg_produto = PythonOperator(
         task_id="vertex_stg_produto",
-        python_callable=STG_PRODUTO.run_stg_produto,
+        python_callable=stg.run_stg_produto,
         op_kwargs={"connection": conn_db},
         dag=dag
     )

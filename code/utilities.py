@@ -1,5 +1,7 @@
 import datetime as dt
 
+from pandasql import sqldf
+
 import pandas as pd
 import unidecode as ud
 
@@ -329,12 +331,13 @@ def insert_default_values_table(df,
 
     df_default = pd.DataFrame(
         data={
-            k: [-3, -2, -1]
-            if k in k_numerics
-            else [dt.datetime(1900, 1, 1) for _ in range(3)]
-            if k in k_datetime
-            else ["Desconhecido", "Não Aplicável", "Não Informado"]
-            for k in df.keys()
+            k: (
+                [-3, -2, -1]
+                if k in k_numerics
+                else [dt.datetime(1900, 1, 1) for _ in range(3)]
+                if k in k_datetime
+                else ["Desconhecido", "Não Aplicável", "Não Informado"]
+            ) for k in df.keys()
         }
     )
 
@@ -594,3 +597,21 @@ def generate_date_table(start_date,
             )
         )
     ).filter(order_columns)
+
+
+def table_exists(
+    connection,
+    schema_name,
+    table_name
+):
+    query = f"""
+        select to_regclass('{schema_name}.{table_name}');
+    """
+
+    df_tables = sqldf(
+        query=query,
+        db_uri=connection.url
+    )
+
+    return df_tables.to_regclass.iloc[0] is not None
+

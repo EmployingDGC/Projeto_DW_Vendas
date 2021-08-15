@@ -1,27 +1,31 @@
 from datetime import datetime, date
 import pandas as pd
 from pandasql import sqldf
-import CONEXAO as con
+import connection as con
 import DW_TOOLS as dwt
 from sqlalchemy.types import Integer, String, DateTime
 from sqlalchemy.orm import sessionmaker
 import sqlalchemy as sqla
 
-def update_dim_loja(dim_update, conn):
+def update_dim_loja(dim_update, connection):
+    session = sessionmaker(
+        bind=connection
+    )()
 
-    Session = sessionmaker(bind=conn)
-    session = Session()
-    metadata = sqla.MetaData(bind=conn)
+    metadata = sqla.MetaData(
+        bind=connection
+    )
 
     datatable = sqla.Table('d_loja', metadata, schema='dw', autoload=True)
 
     update = (
-        sqla.sql.update(datatable).values(
-            {'fl_ativo': 0, 'dt_vigencia_fim': datetime.today()}
-        ).
-            where(
+        sqla.sql.update(datatable).values({
+            "fl_ativo": 0,
+            "dt_vigencia_fim": date.today()
+        }).where(
             sqla.and_(
-                datatable.c.cd_loja.in_(dim_update.cd_loja), datatable.c.fl_ativo == 1
+                datatable.columns.cd_loja.in_(dim_update.cd_loja),
+                datatable.columns.fl_ativo == 1
             )
         )
     )
@@ -30,13 +34,14 @@ def update_dim_loja(dim_update, conn):
     session.flush()
     session.commit()
 
-def extract_dim_loja(con_out, exists_dim):
 
-    stg_loja = dwt.read_table(conn=con_out, schema="stage", table_name="stg_loja",
-                         columns=["id_loja", "nome_loja", "razao_social", "cnpj",
+def extract_dim_loja(connection, exists_dim):
+
+    stg_loja = dwt.read_table(conn=connection, schema="stage", table_name="stg_loja",
+                              columns=["id_loja", "nome_loja", "razao_social", "cnpj",
                                   "id_endereco"])
 
-    stg_endereco = dwt.read_table(conn=con_out, schema="stage", table_name="stg_endereco",
+    stg_endereco = dwt.read_table(conn=connection, schema="stage", table_name="stg_endereco",
                                   columns=["id_endereco", "estado", "cidade", "bairro",
                                            "rua"])
 
@@ -48,40 +53,41 @@ def extract_dim_loja(con_out, exists_dim):
     if exists_dim:
 
         query = """
-        SELECT tbl.*, dim.dt_vigencia_fim,
-                CASE
-                    WHEN dim.cd_loja IS NULL 
+        SELECT dl.*, dim.dt_vigencia_fim,
+            CASE
+                WHEN dim.cd_loja IS NULL 
                     THEN 'I'
-                    WHEN dim.cd_endereco        != tbl.id_endereco
-                        OR dim.ds_razao_social  != tbl.razao_social
-                        OR dim.nu_cnpj          != tbl.cnpj
+                WHEN (
+                    dim.cd_endereco         != dl.id_endereco
+                    OR dim.ds_razao_social  != dl.razao_social
+                    OR dim.nu_cnpj          != dl.cnpj
+                )
                     THEN 'U'
-                    ELSE 'N'
-                END as fl_insert_update
-                FROM tbl_loja tbl
-                LEFT JOIN  dw.d_loja dim 
-                ON (tbl.id_loja = dim.cd_loja)
-                AND dim.fl_ativo = 1
+                ELSE 'N'
+            END as fl_iun
+        FROM d_loja dl
+        LEFT JOIN dw.d_loja as dim 
+            ON (dl.id_loja = dim.cd_loja)
+            AND dim.fl_ativo = 1
         """
 
-        tbl_loja = sqldf(query, {"tbl_loja": tbl_loja}, con_out.url
-        )
+        tbl_loja = sqldf(query, {"d_loja": tbl_loja}, connection.url)
 
     else:
         tbl_loja = (
             tbl_loja.assign(
-                fl_insert_update='I'
+                fl_iun='I'
             )
         )
 
     return tbl_loja
 
 
-def treat_dim_loja(tbl, con_out, exists_dim):
+def treat_dim_loja(tbl, connection, exists_dim):
 
     columns_select = ["cd_loja", "no_loja", "ds_razao_social", "nu_cnpj", "cd_endereco",
                       "no_estado", "no_cidade", "no_bairro", "no_rua", 'fl_ativo',
-                      'dt_vigencia_inicio', 'dt_vigencia_fim', 'fl_insert_update']
+                      'dt_vigencia_inicio', 'dt_vigencia_fim', 'fl_iun']
 
     columns_name = {
         "id_loja": "cd_loja", "nome_loja": "no_loja", "razao_social": "ds_razao_social",
@@ -94,15 +100,18 @@ def treat_dim_loja(tbl, con_out, exists_dim):
             rename(columns=columns_name).
             filter(columns_select).
             assign(
-            dt_vigencia_inicio=datetime.today(),
+            dt_vigencia_inicio=datetime.today().date(),
             fl_ativo=1
         )
     )
 
     if exists_dim:
 
-        sk_index = dwt.find_sk(conn=con_out, schema_name='dw', table_name='d_loja',
-                              sk_name='sk_loja')
+        sk_index = dwt.read_table(
+            conn=connection,
+            schema="dw",
+            table_name="d_loja"
+        ).sk_loja.max() + 1
 
         d_loja.insert(0, "sk_loja", range(sk_index, sk_index + len(d_loja)))
 
@@ -122,7 +131,7 @@ def treat_dim_loja(tbl, con_out, exists_dim):
             d_loja.assign(
                 dt_vigencia_fim=None
             ).
-                drop("fl_insert_update", axis=1).
+                drop("fl_iun", axis=1).
                 filter(columns_select)
         )
 
@@ -143,50 +152,56 @@ def treat_dim_loja(tbl, con_out, exists_dim):
     return d_loja
 
 
-def load_dim_loja(dim_loja, con_out, exists_dim):
-
+def load_dim_loja(d_loja, connection, exists_dim):
     data_types = {
-        'sk_loja': Integer(), 'cd_loja': Integer(), 'no_loja': String(),
-        'ds_razao_social': String(), 'nu_cnpj': String(), 'cd_endereco': Integer(),
-        'no_estado': String(), 'no_cidade': String(), 'no_bairro': String(),
-        'no_rua': String(), 'dt_vigencia_inicio': DateTime(),
-        'dt_vigencia_fim': DateTime(), 'fl_ativo': Integer()
+        'sk_loja': Integer(),
+        'cd_loja': Integer(),
+        'no_loja': String(),
+        'ds_razao_social': String(),
+        'nu_cnpj': String(),
+        'cd_endereco': Integer(),
+        'no_estado': String(),
+        'no_cidade': String(),
+        'no_bairro': String(),
+        'no_rua': String(),
+        'dt_vigencia_inicio': DateTime(),
+        'dt_vigencia_fim': DateTime(),
+        'fl_ativo': Integer()
     }
 
     if exists_dim:
 
-        df_update = dim_loja.query("fl_insert_update == 'U'")
-        del dim_loja['fl_insert_update']
+        df_update = d_loja.query("fl_iun == 'U'")
+        del d_loja['fl_iun']
 
         if df_update.shape[0] > 0:
-            update_dim_loja(df_update, con_out)
+            update_dim_loja(df_update, connection)
 
     (
-        dim_loja.astype('string').
+        d_loja.astype('string').
             to_sql(
-            name="d_loja", con=con_out, schema="dw", if_exists="append", index=False,
+            name="d_loja", con=connection, schema="dw", if_exists="append", index=False,
             dtype=data_types
         )
     )
 
-def run_dim_loja(conn):
+def run_dim_loja(connection):
 
-    fl_dim = sqla.inspect(conn).has_table(table_name='d_loja', schema='dw')
+    fl_dim = sqla.inspect(connection).has_table(table_name='d_loja', schema='dw')
 
-    tbl_loja = extract_dim_loja(con_out=conn, exists_dim=fl_dim)
+    tbl_loja = extract_dim_loja(connection=connection, exists_dim=fl_dim)
 
-    df_loja = tbl_loja.query("fl_insert_update == 'I' or fl_insert_update == 'U'")
-
+    df_loja = tbl_loja.query("fl_iun == 'I' or fl_iun == 'U'")
 
     if df_loja.shape[0] > 0:
         (
-            treat_dim_loja(tbl=tbl_loja, con_out=conn, exists_dim=fl_dim).
-                pipe(load_dim_loja, con_out=conn, exists_dim=fl_dim)
+            treat_dim_loja(tbl=tbl_loja, connection=connection, exists_dim=fl_dim).
+                pipe(load_dim_loja, connection=connection, exists_dim=fl_dim)
         )
 
 
 if __name__ == '__main__':
-    conn_out = con.connect_postgre("127.0.0.1,", "ProjetoDW_Vendas",
-                                    "airflow", "666itix", 5432)
+    conn_out = con.create_connection_postgre("127.0.0.1,", "ProjetoDW_Vendas",
+                                             "airflow", "666itix", 5432)
 
-    run_dim_loja(conn=conn_out)
+    run_dim_loja(connection=conn_out)
