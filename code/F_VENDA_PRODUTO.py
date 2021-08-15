@@ -142,7 +142,6 @@ def treat_fact_venda_produto(frame, connection):
 
 
 
-
 def load_fact_venda_produto(frame, connection):
     """
     Carrega a fato venda no banco de dados do dw
