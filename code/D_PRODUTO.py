@@ -39,15 +39,7 @@ def treat_dim_produto(frame):
     :return: dataframe com os dados tratados para fazer a dimensão produto
     """
 
-    columns_rename = {
-        "id_produto": "cd_produto",
-        "cod_barra": "cd_barras",
-        "nome_produto": "no_produto",
-        "data_cadastro": "dt_cadastro",
-        "ativo": "fl_ativo"
-    }
-
-    order_columns = [
+    select_columns = [
         "sk_produto",
         "cd_produto",
         "cd_barras",
@@ -57,16 +49,16 @@ def treat_dim_produto(frame):
     ]
 
     return frame.assign(
-        id_produto=lambda df: df.cod_barras.astype("Int64"),
-        ativo=lambda df: df.ativo.astype("Int64"),
-        data_cadastro=lambda df: df.data_cadastro.astype("datetime64[ns]"),
+        cd_produto=lambda df: df.id_produto.astype("Int64"),
+        cd_barra=lambda df: df.cod_barra.astype("Int64"),
+        dt_cadastro=lambda df: df.data_cadastro.astype("datetime64[ns]"),
+        no_produto=lambda df: df.nome_produto,
+        fl_ativo=lambda df: df.ativo.astype("int64"),
         sk_produto=lambda df: utl.create_index_dataframe(df, 1)
-    ).rename(
-        columns=columns_rename
+    ).filter(
+        items=select_columns
     ).pipe(
         func=utl.insert_default_values_table
-    ).filter(
-        items=order_columns
     )
 
 

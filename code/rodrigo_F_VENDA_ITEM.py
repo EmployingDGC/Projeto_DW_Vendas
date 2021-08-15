@@ -1,32 +1,32 @@
 import pandas as pd
-import CONEXAO as con
+import connection as con
 import DW_TOOLS as dwt
 from sqlalchemy.types import Integer, String, DateTime, Float, Date
 from datetime import datetime
 from pandasql import sqldf
 
-def extract_fact_venda(con_out, date):
+def extract_fact_venda(connection, date):
 
-    stg_venda= dwt.read_table(conn=con_out, schema="stage", table_name="stg_venda",
+    stg_venda= dwt.read_table(conn=connection, schema="stage", table_name="stg_venda",
                               columns=['id_venda', 'id_pagamento', 'id_cliente',
                                        'id_func', 'id_loja', 'data_venda', 'nfc'],
                               where=f"data_venda > '{date}'")
 
     if stg_venda.shape[0] != 0:
 
-        d_cliente = dwt.read_table(conn=con_out, schema="dw", table_name="d_cliente",
+        d_cliente = dwt.read_table(conn=connection, schema="dw", table_name="d_cliente",
                                    columns=['sk_cliente', 'cd_cliente'])
 
-        d_funcionario = dwt.read_table(conn=con_out, schema="dw", table_name="d_funcionario",
+        d_funcionario = dwt.read_table(conn=connection, schema="dw", table_name="d_funcionario",
                                        columns=['sk_funcionario', 'cd_funcionario'])
 
-        d_forma_pg = dwt.read_table(conn=con_out, schema="dw", table_name="d_forma_pagamento",
+        d_forma_pg = dwt.read_table(conn=connection, schema="dw", table_name="d_forma_pagamento",
                                     columns=['sk_forma_pagamento', 'cd_forma_pagamento'])
 
-        d_calendar = dwt.read_table(conn=con_out, schema="dw", table_name="d_data",
+        d_calendar = dwt.read_table(conn=connection, schema="dw", table_name="d_data",
                                     columns=['sk_data', 'dt_referencia'])
 
-        stg_item_venda = dwt.read_table(conn=con_out, schema="stage",
+        stg_item_venda = dwt.read_table(conn=connection, schema="stage",
                                         table_name="stg_item_venda")
 
 
@@ -55,25 +55,25 @@ def extract_fact_venda(con_out, date):
         )
 
         query = """
-                    SELECT t.*, p.sk_produto, p.vl_lucro, p.vl_preco, l.sk_loja
-                     FROM venda t
-                     LEFT JOIN dw.d_produto p
-                     ON (t.id_produto = p.cd_produto
-                            AND date(t.data_venda) >= date(p.dt_vigencia_inicio)
-                            AND (date(t.data_venda) < date(p.dt_vigencia_fim) 
-                                OR p.dt_vigencia_fim IS NULL)
-                     )
-                     LEFT JOIN dw.d_loja l
-                     ON (t.id_loja = l.cd_loja
-                            AND date(t.data_venda) >= date(l.dt_vigencia_inicio) 
-                            AND (date(t.data_venda) < date(l.dt_vigencia_fim)
-                                OR l.dt_vigencia_fim IS NULL)
-                    )
-                """
+            SELECT t.*, p.sk_produto, p.vl_lucro, p.vl_preco, l.sk_loja
+            FROM venda t
+            LEFT JOIN dw.d_produto p
+            ON (t.id_produto = p.cd_produto
+                AND date(t.data_venda) >= date(p.dt_vigencia_inicio)
+                AND (date(t.data_venda) < date(p.dt_vigencia_fim) 
+                    OR p.dt_vigencia_fim IS NULL)
+            )
+            LEFT JOIN dw.d_loja l
+            ON (t.id_loja = l.cd_loja
+                AND date(t.data_venda) >= date(l.dt_vigencia_inicio) 
+                AND (date(t.data_venda) < date(l.dt_vigencia_fim)
+                    OR l.dt_vigencia_fim IS NULL)
+            )
+        """
 
         tbl_venda = sqldf(
             query, {"venda": tbl_venda_temp}
-            , con_out.url
+            , connection.url
         )
     else:
         tbl_venda=stg_venda
@@ -139,7 +139,7 @@ def run_fact_venda(con_out):
 
 
 if __name__ == '__main__':
-    conexao_postgre = con.connect_postgre("127.0.0.1,", "ProjetoDW_Vendas",
-                                          "airflow", "666itix", 5432)
+    conexao_postgre = con.create_connection_postgre("127.0.0.1,", "ProjetoDW_Vendas",
+                                                    "airflow", "666itix", 5432)
 
     run_fact_venda(con_out=conexao_postgre)

@@ -17,7 +17,8 @@ def extract_dim_data():
 
     return utl.generate_date_table(
         start_date="2016-01-01",
-        end_date="2030-01-01"
+        end_date="2030-01-01",
+        frequency="H"
     )
 
 

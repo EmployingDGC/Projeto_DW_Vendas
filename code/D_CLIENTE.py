@@ -154,6 +154,8 @@ def treat_dim_cliente(frame, connection):
             sk_cliente=lambda df: utl.create_index_dataframe(df, last_sk)
         ).filter(
             items=select_columns_old
+        ).pipe(
+            func=utl.insert_default_values_table
         )
 
     else:

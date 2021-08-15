@@ -63,7 +63,7 @@ def treat_dim_tipo_pagamento(frame, connection):
         old_d_tipo_pagamento = dwt.read_table(
             conn=connection,
             schema="dw",
-            table_name="d_cliente"
+            table_name="d_tipo_pagamento"
         )
 
     except:

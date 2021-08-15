@@ -2,8 +2,13 @@ import utilities as utl
 import connection as conn
 import DW_TOOLS as dwt
 
+from pandasql import sqldf
+import datetime as dt
+
 from sqlalchemy.types import (
     Integer,
+    String,
+    DateTime,
     Float
 )
 
@@ -15,18 +20,115 @@ def extract_fact_venda_produto(connection):
     :return: dataframe com o merge das stages venda e item_venda
     """
 
-    return dwt.read_table(
+    if utl.table_exists(
+        connection=connection,
+        schema_name="dw",
+        table_name="f_venda_produto"
+    ):
+        query = """
+            select *
+            from stage.stg_venda as sv
+            where date(sv.data_venda) > (
+                select max(fvp.dt_load)
+                from dw.f_venda_produto as fvp
+            )
+        """
+
+    else:
+        query = """
+            select *
+            from stage.stg_venda
+        """
+
+    stg_venda = sqldf(
+        query=query,
+        db_uri=connection.url
+    )
+
+    if stg_venda.empty:
+        return stg_venda
+
+    d_cliente = dwt.read_table(
+        conn=connection,
+        schema="dw",
+        table_name="d_cliente",
+        columns=[
+            "sk_cliente",
+            "cd_cliente"
+        ]
+    )
+
+    d_data = dwt.read_table(
+        conn=connection,
+        schema="dw",
+        table_name="d_data",
+        columns=[
+            "sk_data",
+            "dt_referencia"
+        ]
+    )
+
+    d_funcionario = dwt.read_table(
+        conn=connection,
+        schema="dw",
+        table_name="d_funcionario",
+        columns=[
+            "sk_funcionario",
+            "cd_funcionario"
+        ]
+    )
+
+    d_tipo_pagamento = dwt.read_table(
+        conn=connection,
+        schema="dw",
+        table_name="d_tipo_pagamento",
+        columns=[
+            "sk_tipo_pagamento",
+            "cd_tipo_pagamento"
+        ]
+    )
+
+    stg_item_venda = dwt.read_table(
         conn=connection,
         schema="stage",
-        table_name="stg_venda"
+        table_name="stg_item_venda"
+    )
+
+    f_venda_produto = stg_venda.assign(
+        dt_hora_venda=lambda df: df.data_venda.astype("datetime64[ns]").dt.floor("h")
     ).merge(
-        right=dwt.read_table(
-            conn=connection,
-            schema="stage",
-            table_name="stg_item_venda"
-        ),
+        right=stg_item_venda,
         how="inner",
-        on="id_venda"
+        on="id_venda",
+        suffixes=("_01", "_02")
+    ).pipe(
+        func=dwt.merge_input,
+        right=d_cliente,
+        left_on="id_cliente",
+        right_on="cd_cliente",
+        suff=["_03", "_04"],
+        surrogate_key="sk_cliente"
+    ).pipe(
+        func=dwt.merge_input,
+        right=d_funcionario,
+        left_on="id_func",
+        right_on="cd_funcionario",
+        suff=["_03", "_04"],
+        surrogate_key="sk_funcionario"
+    ).pipe(
+        func=dwt.merge_input,
+        right=d_tipo_pagamento,
+        left_on="id_pagamento",
+        right_on="cd_tipo_pagamento",
+        suff=["_03", "_04"],
+        surrogate_key="sk_tipo_pagamento"
+    ).pipe(
+        func=dwt.merge_input,
+        right=d_data,
+        left_on="dt_hora_venda",
+        right_on="dt_referencia",
+        suff=["_03", "_04"],
+        surrogate_key="sk_data"
     )
 
 
@@ -38,190 +140,7 @@ def treat_fact_venda_produto(frame, connection):
     :return: dataframe com os dados tratados para fazer a fato venda
     """
 
-    select_columns = [
-        "sk_produto",
-        "sk_cliente",
-        "sk_loja",
-        "sk_funcionario",
-        "sk_data",
-        "sk_categoria",
-        "sk_tipo_pagamento",
-        "sk_endereco_loja",
-        "sk_endereco_cliente",
-        "cd_nfc",
-        "vl_liquido",
-        "vl_bruto",
-        "vl_percentual_lucro",
-        "qtd_produto"
-    ]
 
-    d_produto = dwt.read_table(
-        conn=connection,
-        schema="dw",
-        table_name="d_produto",
-        columns=["sk_produto", "cd_produto", "dt_cadastro"]
-    )
-
-    return frame.assign(
-        data_venda=lambda df: df.data_venda.astype("datetime64[ns]"),
-        sk_produto=lambda df: (
-            utl.convert_column_to_int64(
-                column_data_frame=df.apply(
-                    lambda row: (
-                        d_produto.query(
-                            f"cd_produto == {row.id_produto}"
-                        ).assign(
-                            FL_TRASH=lambda df1: df1.dt_cadastro.apply(
-                                lambda value: row.data_venda < value
-                            )
-                        ).pipe(
-                            lambda df1: df1[~df1.FL_TRASH]
-                        ).sort_values(
-                            by=["dt_cadastro"],
-                            ascending=False
-                        ).iloc[0].sk_produto
-                    ),
-                    axis=1
-                ),
-                default=-3
-            )
-        ),
-        sk_cliente=lambda df: (
-            utl.convert_column_to_int64(
-                column_data_frame=df.merge(
-                    right=dwt.read_table(
-                        conn=connection,
-                        schema="dw",
-                        table_name="d_cliente",
-                        columns=["sk_cliente", "cd_cliente"]
-                    ),
-                    how="left",
-                    left_on="id_cliente",
-                    right_on="cd_cliente"
-                ).sk_cliente,
-                default=-3
-            )
-        ),
-        sk_loja=lambda df: (
-            utl.convert_column_to_int64(
-                column_data_frame=df.merge(
-                    right=dwt.read_table(
-                        conn=connection,
-                        schema="dw",
-                        table_name="d_loja",
-                        columns=["sk_loja", "cd_loja", "fl_ativo"]
-                    ).pipe(
-                        lambda df1: df1[df1["fl_ativo"] == 1]
-                    ),
-                    how="left",
-                    left_on="id_loja",
-                    right_on="cd_loja"
-                ).sk_loja,
-                default=-3
-            )
-        ),
-        sk_funcionario=lambda df: (
-            utl.convert_column_to_int64(
-                column_data_frame=df.merge(
-                    right=dwt.read_table(
-                        conn=connection,
-                        schema="dw",
-                        table_name="d_funcionario",
-                        columns=["sk_funcionario", "cd_funcionario"]
-                    ),
-                    how="left",
-                    left_on="id_func",
-                    right_on="cd_funcionario"
-                ).sk_funcionario,
-                default=-3
-            )
-        ),
-        sk_data=lambda df: (
-            utl.convert_column_to_int64(
-                column_data_frame=df.assign(
-                    data_venda=lambda df1: (
-                        df1.data_venda.apply(
-                            lambda value: f"{str(value).split(':', 1)[0]}:00:00"
-                        ).astype("datetime64[ns]")
-                    )
-                ).merge(
-                    right=dwt.read_table(
-                        conn=connection,
-                        schema="dw",
-                        table_name="d_data",
-                        columns=["sk_data", "dt_referencia"]
-                    ),
-                    how="left",
-                    left_on="data_venda",
-                    right_on="dt_referencia"
-                ).sk_data,
-                default=-3
-            )
-        ),
-        sk_tipo_pagamento=lambda df: (
-            utl.convert_column_to_int64(
-                column_data_frame=df.merge(
-                    right=dwt.read_table(
-                        conn=connection,
-                        schema="dw",
-                        table_name="d_tipo_pagamento",
-                        columns=["sk_tipo_pagamento", "cd_tipo_pagamento"]
-                    ),
-                    how="left",
-                    left_on="id_pagamento",
-                    right_on="cd_tipo_pagamento"
-                ).sk_tipo_pagamento,
-                default=-3
-            )
-        ),
-        cd_nfc=lambda df: (
-            utl.convert_column_to_int64(
-                column_data_frame=df.nfc,
-                default=-3
-            )
-        ),
-        vl_liquido=lambda df: (
-            utl.convert_column_to_float64(
-                column_data_frame=df.merge(
-                    right=dwt.read_table(
-                        conn=connection,
-                        schema="stage",
-                        table_name="stg_produto",
-                        columns=["id_produto", "preco_custo", "ativo"]
-                    ).pipe(
-                        lambda df1: df1[df1["ativo"] == "1"]
-                    ),
-                    how="left",
-                    on="id_produto"
-                ).preco_custo,
-                default=-3
-            )
-        ),
-        vl_percentual_lucro=lambda df: (
-            utl.convert_column_to_float64(
-                column_data_frame=df.merge(
-                    right=dwt.read_table(
-                        conn=connection,
-                        schema="stage",
-                        table_name="stg_produto",
-                        columns=["id_produto", "percentual_lucro", "ativo"]
-                    ).pipe(
-                        lambda df1: df1[df1["ativo"] == "1"]
-                    ),
-                    how="left",
-                    on="id_produto"
-                ).percentual_lucro,
-                default=-3
-            )
-        ),
-        vl_bruto=lambda df: (
-            df.vl_liquido + df.vl_liquido * df.vl_percentual_lucro
-        )
-    ).pipe(
-        func=utl.insert_default_values_table
-    ).filter(
-        items=select_columns
-    )
 
 
 def load_fact_venda_produto(frame, connection):
@@ -259,10 +178,17 @@ def load_fact_venda_produto(frame, connection):
 
 
 def run_fact_venda_produto(connection):
-    extract_fact_venda_produto(connection).pipe(
+    extract = extract_fact_venda_produto(connection)
+
+    if extract.empty:
+        return
+
+    treat = extract.pipe(
         func=treat_fact_venda_produto,
         connection=connection
-    ).pipe(
+    )
+
+    treat.pipe(
         func=load_fact_venda_produto,
         connection=connection
     )
