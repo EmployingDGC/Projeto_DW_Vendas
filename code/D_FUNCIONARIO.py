@@ -2,10 +2,37 @@ import utilities as utl
 import connection as conn
 import DW_TOOLS as dwt
 
+import pandas as pd
+
+from pandasql import sqldf
+
 from sqlalchemy.types import (
     Integer,
-    String
+    String,
+    DateTime
 )
+
+
+def update_dim_funcionario(df_update, connection):
+    query = """
+        delete from
+            dw.d_funcionario
+        where
+            cd_funcionario in (
+                select
+                    du.id_funcionario
+                from
+                    df_update as du
+            )
+    """
+
+    sqldf(
+        query=query,
+        env={
+            "df_update": df_update
+        },
+        db_uri=connection.url
+    )
 
 
 def extract_dim_funcionario(connection):
@@ -15,35 +42,51 @@ def extract_dim_funcionario(connection):
     :return: dataframe com os dados extraidos
     """
 
-    stg_funcionario = dwt.read_table(
-        conn=connection,
-        schema="stage",
-        table_name="stg_funcionario",
-        columns=[
-            "id_funcionario",
-            "cpf",
-            "nome"
-        ]
+    d_funcionario_exists = utl.table_exists(
+        connection=connection,
+        schema_name="dw",
+        table_name="d_funcionario"
     )
 
-    try:
-        old_d_funcionario = dwt.read_table(
-            conn=connection,
-            schema="dw",
-            table_name="d_funcionario"
-        )
+    if not d_funcionario_exists:
+        query = """
+            select
+                sf.*,
+                'I' as fl_iun
+            from
+                stage.stg_funcionario as sf
+        """
 
-    except:
-        return stg_funcionario
+    else:
+        query = """
+            select
+                sf.*,
+                df.*,
+                case
+                    when df.cd_funcionario is null
+                        then 'I'
+                    when (
+                        df.no_funcionario != sf.nome
+                        or df.nu_cpf      != sf.cpf
+                        or df.nu_telefone != sf.tel
+                    )
+                        then 'U'
+                    else 'N'
+                end as fl_iun
+            from
+                stage.stg_funcionario as sf
+            left join
+                dw.d_funcionario as df
+            on
+                sf.id_funcionario = df.cd_funcionario
+        """
 
-    new_d_funcionario = stg_funcionario.merge(
-        right=old_d_funcionario,
-        how="left",
-        left_on="id_funcionario",
-        right_on="cd_funcionario"
-    )[3:]
+    stg_funcionario = sqldf(
+        query=query,
+        db_uri=connection.url
+    )
 
-    return new_d_funcionario
+    return stg_funcionario
 
 
 def treat_dim_funcionario(frame, connection):
@@ -53,45 +96,65 @@ def treat_dim_funcionario(frame, connection):
     :return: dataframe com a dimensão funcionario
     """
 
-    try:
-        last_sk = frame.iloc[-1].sk_funcionario + 1
-
-    except:
-        last_sk = 1
-
     select_columns = [
         "sk_funcionario",
         "cd_funcionario",
+        "no_funcionario",
         "nu_cpf",
-        "no_funcionario"
+        "nu_telefone",
+        "dt_nascimento"
     ]
 
-    try:
-        d_funcionario = frame.assign(
-            fl_trash=lambda df: df.apply(
-                lambda row: (
-                        str(row.nu_cpf) == str(row.cpf)
-                        and str(row.no_funcionario) == str(row.nome)
-                ),
-                axis=1
-            )
-        ).pipe(
-            func=lambda df: df[~df["fl_trash"]]
+    d_funcionario_exists = utl.table_exists(
+        connection=connection,
+        schema_name="dw",
+        table_name="d_funcionario"
+    )
+
+    if d_funcionario_exists:
+        query = """
+            select
+                df.sk_funcionario
+            from
+                dw.d_funcionario as df
+        """
+
+        sk_index = max(
+            sqldf(
+                query=query,
+                db_uri=connection.url
+            ).sk_produto
+        ) + 1
+
+        update_d_funcionario = frame.query(
+            expr="fl_iun == 'U'"
         )
 
-    except:
-        d_funcionario = frame.pipe(
-            func=lambda df: utl.insert_default_values_table(df)
+        update_dim_funcionario(
+            df_update=update_d_funcionario,
+            connection=connection
         )
 
-    return d_funcionario.assign(
+    else:
+        sk_index = 1
+
+    d_funcionario = frame.assign(
         cd_funcionario=lambda df: df.id_funcionario.astype("Int64"),
-        nu_cpf=lambda df: df.cpf,
         no_funcionario=lambda df: df.nome,
-        sk_funcionario=lambda df: utl.create_index_dataframe(df, last_sk)
+        nu_cpf=lambda df: df.cpf,
+        nu_telefone=lambda df: df.tel,
+        dt_nascimento=lambda df: pd.to_datetime(df.data_nascimento, format="%d/%m/%y"),
+        sk_funcionario=lambda df: utl.create_index_dataframe(df, sk_index)
     ).filter(
         items=select_columns
     )
+
+    if not d_funcionario_exists:
+        d_funcionario = d_funcionario.pipe(
+            func=utl.insert_default_values_table
+        )
+
+    return d_funcionario
 
 
 def load_dim_funcionario(frame, connection):
@@ -104,8 +167,10 @@ def load_dim_funcionario(frame, connection):
     dtypes = {
         "sk_funcionario": Integer(),
         "cd_funcionario": Integer(),
+        "no_funcionario": String(),
         "nu_cpf": String(),
-        "no_funcionario": String()
+        "nu_telefone": String(),
+        "dt_nascimento": DateTime(),
     }
 
     frame.to_sql(
@@ -120,10 +185,23 @@ def load_dim_funcionario(frame, connection):
 
 
 def run_dim_funcionario(connection):
-    extract_dim_funcionario(connection).pipe(
-        func=treat_dim_funcionario,
+    extract = extract_dim_funcionario(
         connection=connection
     ).pipe(
+        func=lambda df: df.query(
+            "fl_iun == 'I' or fl_iun == 'U'"
+        )
+    )
+
+    if extract.empty:
+        return
+
+    treat = extract.pipe(
+        func=treat_dim_funcionario,
+        connection=connection
+    )
+
+    treat.pipe(
         func=load_dim_funcionario,
         connection=connection
     )
