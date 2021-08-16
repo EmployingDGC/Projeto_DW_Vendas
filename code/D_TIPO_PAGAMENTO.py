@@ -2,10 +2,34 @@ import utilities as utl
 import connection as conn
 import DW_TOOLS as dwt
 
+from pandasql import sqldf
+
 from sqlalchemy.types import (
     Integer,
     String
 )
+
+
+def update_dim_tipo_pagamento(df_update, connection):
+    query = """
+        delete from
+            dw.d_tipo_pagamento
+        where
+            cd_tipo_pagamento in (
+                select
+                    du.id_pagamento
+                from
+                    df_update as du
+            )
+    """
+
+    sqldf(
+        query=query,
+        env={
+            "df_update": df_update
+        },
+        db_uri=connection.url
+    )
 
 
 def extract_dim_tipo_pagamento(connection):
@@ -15,16 +39,50 @@ def extract_dim_tipo_pagamento(connection):
     :return: dataframe com os dados extraidos da stage forma_pagamento
     """
 
-    return dwt.read_table(
-        conn=connection,
-        schema="stage",
-        table_name="stg_forma_pagamento",
-        columns=[
-            "id_pagamento",
-            "nome",
-            "descricao"
-        ]
+    d_tipo_pagamento_exists = utl.table_exists(
+        connection=connection,
+        schema_name="dw",
+        table_name="d_tipo_pagamento"
     )
+
+    if not d_tipo_pagamento_exists:
+        query = """
+            select
+                sfp.*,
+                'I' as fl_iun
+            from
+                stage.stg_forma_pagamento as sfp
+        """
+
+    else:
+        query = """
+            select
+                sfp.*,
+                dtp.*,
+                case
+                    when dtp.cd_tipo_pagamento is null
+                        then 'I'
+                    when (
+                        dtp.no_tipo_pagamento    != sfp.nome
+                        or dtp.ds_tipo_pagamento != sfp.descricao
+                    )
+                        then 'U'
+                    else 'N'
+                end as fl_iun
+            from
+                stage.stg_forma_pagamento as sfp 
+            left join
+                dw.d_tipo_pagamento as dtp
+            on
+                sfp.id_pagamento = dtp.cd_tipo_pagamento
+        """
+
+    stg_forma_pagamento = sqldf(
+        query=query,
+        db_uri=connection.url
+    )
+
+    return stg_forma_pagamento
 
 
 def treat_dim_tipo_pagamento(frame, connection):
@@ -41,54 +99,54 @@ def treat_dim_tipo_pagamento(frame, connection):
         "ds_tipo_pagamento"
     ]
 
-    rename_columns_x = {
-        "sk_tipo_pagamento_x": "sk_tipo_pagamento",
-        "cd_tipo_pagamento_x": "cd_tipo_pagamento",
-        "no_tipo_pagamento_x": "no_tipo_pagamento",
-        "ds_tipo_pagamento_x": "ds_tipo_pagamento"
-    }
+    d_tipo_pagamento_exists = utl.table_exists(
+        connection=connection,
+        schema_name="dw",
+        table_name="d_tipo_pagamento"
+    )
 
-    new_d_tipo_pagamento = frame.assign(
+    if d_tipo_pagamento_exists:
+        query = """
+            select
+                dtp.sk_tipo_pagamento
+            from
+                dw.d_tipo_pagamento as dtp
+        """
+
+        sk_index = max(
+            sqldf(
+                query=query,
+                db_uri=connection.url
+            ).sk_tipo_pagamento
+        ) + 1
+
+        update_d_tipo_pagamento = frame.query(
+            expr="fl_iun == 'U'"
+        )
+
+        update_dim_tipo_pagamento(
+            df_update=update_d_tipo_pagamento,
+            connection=connection
+        )
+
+    else:
+        sk_index = 1
+
+    d_tipo_pagamento = frame.assign(
         cd_tipo_pagamento=lambda df: df.id_pagamento.astype("Int64"),
         no_tipo_pagamento=lambda df: df.nome,
         ds_tipo_pagamento=lambda df: df.descricao,
-        sk_tipo_pagamento=lambda df: utl.create_index_dataframe(df, 1)
-    ).pipe(
-        func=utl.insert_default_values_table
+        sk_tipo_pagamento=lambda df: utl.create_index_dataframe(df, sk_index)
     ).filter(
         items=select_columns
     )
 
-    try:
-        old_d_tipo_pagamento = dwt.read_table(
-            conn=connection,
-            schema="dw",
-            table_name="d_tipo_pagamento"
+    if not d_tipo_pagamento_exists:
+        d_tipo_pagamento = d_tipo_pagamento.pipe(
+            func=utl.insert_default_values_table
         )
 
-    except:
-        return new_d_tipo_pagamento
-
-    return new_d_tipo_pagamento.merge(
-        right=old_d_tipo_pagamento,
-        how="inner",
-        on="cd_tipo_pagamento"
-    ).assign(
-        fl_trash=lambda df: df.apply(
-            lambda row: (
-                str(row.cd_tipo_pagamento_x) == str(row.cd_tipo_pagamento_y) and
-                str(row.no_tipo_pagamento_x) == str(row.no_tipo_pagamento_y) and
-                str(row.ds_tipo_pagamento_x) == str(row.ds_tipo_pagamento_y)
-            ),
-            axis=1
-        )
-    ).pipe(
-        lambda df: df[~df["fl_trash"]]
-    ).rename(
-        columns=rename_columns_x
-    ).filter(
-        items=select_columns
-    )
+    return d_tipo_pagamento
 
 
 def load_dim_tipo_pagamento(frame, connection):
@@ -117,10 +175,23 @@ def load_dim_tipo_pagamento(frame, connection):
 
 
 def run_dim_tipo_pagamento(connection):
-    extract_dim_tipo_pagamento(connection).pipe(
-        func=treat_dim_tipo_pagamento,
-        connection = connection
+    extract = extract_dim_tipo_pagamento(
+        connection=connection
     ).pipe(
+        func=lambda df: df.query(
+            expr="fl_iun == 'I' or fl_iun == 'U'"
+        )
+    )
+
+    if extract.empty:
+        return
+
+    treat = extract.pipe(
+        func=treat_dim_tipo_pagamento,
+        connection=connection
+    )
+
+    treat.pipe(
         func=load_dim_tipo_pagamento,
         connection=connection
     )
