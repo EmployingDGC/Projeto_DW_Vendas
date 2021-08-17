@@ -211,7 +211,7 @@ def treat_fact_venda_produto(frame, connection):
     }
 
     f_venda_produto = frame.assign(
-        sk_produto=lambda df: df.sk_produto.fillna(value=-3).astype("Int64"),
+        sk_cliente=lambda df: df.sk_cliente.fillna(value=-3).astype("Int64"),
         sk_loja=lambda df: df.sk_loja.fillna(value=-3).astype("Int64"),
         vl_custo_un=lambda df: df.vl_custo.str.replace(",", ".").astype("float64"),
         vl_percentual_lucro_un=lambda df: df.vl_percentual_lucro.str.replace(",", ".").astype("float64"),
@@ -254,7 +254,7 @@ def load_fact_venda_produto(frame, connection):
         name="f_venda_produto",
         con=connection,
         schema="dw",
-        if_exists="replace",
+        if_exists="append",
         index=False,
         chunksize=10000,
         dtype=dtypes
