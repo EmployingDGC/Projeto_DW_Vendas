@@ -2,6 +2,8 @@ import utilities as utl
 import connection as conn
 import DW_TOOLS as dwt
 
+import unidecode as ud
+
 import datetime as dt
 
 from pandasql import sqldf
@@ -11,9 +13,111 @@ import pandas as pd
 from sqlalchemy.types import (
     Integer,
     String,
-    DateTime,
-    Float
+    DateTime
 )
+
+
+def get_category_dim_produto(product_name):
+    product_ud = ud.unidecode(product_name.upper())
+    split_product_ud = product_ud.split(" ")
+
+    all_categories = {
+        "Café da Manhã": [
+            "CAFE",
+            "ACHOCOLATADO",
+            "CEREAL",
+            "CEREAIS",
+            "PAO",
+            "ACUCAR",
+            "ADOCANTE",
+            "BISCOITO",
+            "GELEIA",
+            "IORGUTE"
+        ],
+        "Mercearia": [
+            "ARROZ",
+            "FEIJAO",
+            "FARINHA",
+            "TRIGO"
+            "AMIDO",
+            "FERMENTO",
+            "MACARRAO",
+            "MOLHO",
+            "AZEITE",
+            "OLEO",
+            "OVOS",
+            "TEMPEROS",
+            "SAL",
+            "SAZON",
+            "FARINHA",
+            "AVEIA",
+            "FANDANGOS"
+        ],
+        "Carnes": [
+            "BIFE",
+            "FRANGO",
+            "PEIXE",
+            "CARNE MOIDA",
+            "SALSICHA",
+            "LINGUICA"
+        ],
+        "Bebidas": [
+            "SUCO",
+            "CERVEJA",
+            "REFRIGERANTE",
+            "VINHO"
+        ],
+        "Higiene": [
+            "SABONETE",
+            "CREME DENTAL",
+            "SHAMPOO",
+            "CONDICIONADOR",
+            "ABSORVENTE",
+            "PAPEL HIGIENICO",
+            "FRALDA"
+        ],
+        "Laticínios / Frios": [
+            "LEITE",
+            "PRESUNTO",
+            "QUEIJO",
+            "REQUEIJAO",
+            "MANTEIGA",
+            "CREME DE LEITE"
+        ],
+        "Limpeza": [
+            "AGUA SANITARIA",
+            "SABAO",
+            "PALHA DE ACO",
+            "AMACIANTE",
+            "DETERGENTE",
+            "SACO",
+            "DESINFETANTE",
+            "PAPEL TOALHA"
+        ],
+        "Hortifruti": [
+            "ALFACE",
+            "CEBOLA",
+            "ALHO",
+            "TOMATE",
+            "LIMAO",
+            "BANANA",
+            "MACA",
+            "BATATA"
+        ]
+    }
+
+    for k, v in all_categories.items():
+        join_v = " ".join(v)
+
+        if product_ud in join_v:
+            return k
+
+        if len(split_product_ud) > 1:
+            for w in split_product_ud:
+                if w in join_v:
+                    return k
+
+    return None
 
 
 def update_dim_produto(df_update, connection):
@@ -50,11 +154,13 @@ def extract_dim_produto(connection):
     :return: dataframe com os dados extraidos da stage produto
     """
 
-    if utl.table_exists(
+    d_produto_exists = utl.table_exists(
         connection=connection,
         schema_name="dw",
         table_name="d_produto"
-    ):
+    )
+
+    if d_produto_exists:
         query = """
             select
                 sp.*,
@@ -104,10 +210,17 @@ def treat_dim_produto(frame, connection):
     :return: dataframe com os dados tratados para fazer a dimensão produto
     """
 
+    d_produto_exists = utl.table_exists(
+        connection=connection,
+        schema_name="dw",
+        table_name="d_produto"
+    )
+
     select_columns = [
         "sk_produto",
         "cd_produto",
         "no_produto",
+        "ds_categoria",
         "cd_barra",
         "vl_custo",
         "vl_percentual_lucro",
@@ -115,12 +228,6 @@ def treat_dim_produto(frame, connection):
         "dt_vigencia_fim",
         "fl_ativo"
     ]
-
-    d_produto_exists = utl.table_exists(
-        connection=connection,
-        schema_name="dw",
-        table_name="d_produto"
-    )
 
     if d_produto_exists:
         query = """
@@ -164,7 +271,10 @@ def treat_dim_produto(frame, connection):
         fl_ativo=1,
         sk_produto=lambda df: utl.create_index_dataframe(df, sk_index)
     ).assign(
-        dt_vigencia_fim=lambda df: df.dt_vigencia_fim.astype("datetime64[ns]")
+        dt_vigencia_fim=lambda df: df.dt_vigencia_fim.astype("datetime64[ns]"),
+        ds_categoria=lambda df: df.no_produto.apply(
+            func=lambda v: get_category_dim_produto(v)
+        )
     ).filter(
         items=select_columns
     )
@@ -197,6 +307,7 @@ def load_dim_produto(frame, connection):
         "sk_produto": Integer(),
         "cd_produto": Integer(),
         "no_produto": String(),
+        "ds_categoria": String(),
         "cd_barra": Integer(),
         "vl_custo": String(),
         "vl_percentual_lucro": String(),
