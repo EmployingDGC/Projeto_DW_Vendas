@@ -2,9 +2,6 @@ import utilities as utl
 import DW_TOOLS as dwt
 import connection as conn
 
-import sqlalchemy as sqla
-from pandasql import sqldf
-
 from sqlalchemy.types import (
     Integer,
     String
@@ -18,9 +15,11 @@ def extract_dim_cliente(connection):
     :return: dataframe com o merge das stages cliente e endereço
     """
 
-    # stg_cliente = dwt.read_table(conn=connection, schema="stage", table_name="stg_cliente",
-    #                              columns=["id_cliente", "nome", "cpf", "tel",
-    #                                       "id_endereco"])
+    d_cliente_exists = utl.table_exists(
+        connection=connection,
+        schema_name="dw",
+        table_name="d_cliente"
+    )
 
     stg_cliente = dwt.read_table(
         conn=connection,
@@ -34,20 +33,11 @@ def extract_dim_cliente(connection):
         ]
     )
 
-    # stg_endereco = dwt.read_table(conn=connection, schema="stage", table_name="stg_endereco",
-    #                               columns=["id_endereco", "estado", "cidade", "bairro",
-    #                                        "rua"])
-
     stg_endereco = dwt.read_table(
         conn=connection,
         schema="stage",
         table_name="stg_endereco"
     )
-
-    # merge_stg_cliente_endereco = (
-    #     stg_cliente.merge(right=stg_endereco, left_on="id_endereco", right_on="id_endereco",
-    #                       how="left", suffixes=["_01", "_02"])
-    # )
 
     merge_stg_cliente_endereco = stg_cliente.merge(
         right=stg_endereco,
@@ -55,30 +45,14 @@ def extract_dim_cliente(connection):
         on="id_endereco"
     )
 
-    # if sqla.inspect(connection).has_table(table_name='d_cliente', schema='dw'):
-    try:
-        old_d_cliente = dwt.read_table(
-            conn=connection,
-            schema="dw",
-            table_name="d_cliente"
-        )
-
-    except:
+    if not d_cliente_exists:
         return merge_stg_cliente_endereco
 
-    # query = """
-    #     SELECT sc.*
-    #     FROM stage.stg_cliente as sc
-    #     LEFT JOIN dw.d_cliente as dc
-    #     ON (sc.id_cliente = dc.cd_cliente)
-    #     WHERE dc.cd_cliente IS NULL
-    # """
-    #
-    # merge_stgs_dim = sqldf(
-    #     query=query,
-    #     env={"stg_clinte": merge_stg_cliente_endereco},
-    #     db_uri=connection.url
-    # )
+    old_d_cliente = dwt.read_table(
+        conn=connection,
+        schema="dw",
+        table_name="d_cliente"
+    )
 
     merge_stgs_dim = merge_stg_cliente_endereco.merge(
         right=old_d_cliente,
@@ -99,7 +73,13 @@ def treat_dim_cliente(frame, connection):
     :return: dataframe com a dimensão cliente
     """
 
-    try:
+    d_cliente_exist = utl.table_exists(
+        connection=connection,
+        schema_name="dw",
+        table_name="d_cliente"
+    )
+
+    if d_cliente_exist:
         last_sk = dwt.read_table(
             conn=connection,
             schema="dw",
@@ -107,7 +87,7 @@ def treat_dim_cliente(frame, connection):
             columns=["sk_cliente"]
         ).sk_cliente.max() + 1
 
-    except:
+    else:
         last_sk = 1
 
     select_columns_new = [
